@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Text.RegularExpressions;
 using EduMonitor.Infrastructure;
 using EduMonitor.Usuarios.Data;
 using EduMonitor.Usuarios.DTOs;
@@ -10,19 +11,29 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 namespace EduMonitor.Usuarios.Services;
 
+//Generar el token JWT
 public sealed class UsuariosService(UsuariosDb db, IPasswordHasher<User> hasher, IConfiguration config)
 {
-    private static UserView View(User u) => new(u.Id, u.Name, u.Email, u.Role);
+    private static string[] CarrerasDe(User u) => u.Profile?.Carreras.Select(c => c.CarreraCodigo).Order().ToArray() ?? [];
+    private static UserView View(User u) => new(u.Id, u.Name, u.Email, u.Role, CarrerasDe(u));
+    private static TeacherView TeacherOf(User u) => new(u.Id, u.Name, u.Email, u.Profile?.Cedula ?? "", u.Profile?.Nombres ?? u.Name, u.Profile?.Apellidos ?? "", u.Profile?.Telefono, u.Profile?.TituloAcademico, CarrerasDe(u));
+    private IQueryable<User> WithProfile() => db.Users.Include(x => x.Profile).ThenInclude(p => p!.Carreras);
     public async Task<object> Login(LoginRequest input, CancellationToken ct)
     {
         var email = input.Email.Trim().ToLowerInvariant();
-        var user = await db.Users.SingleOrDefaultAsync(x => x.Email == email, ct);
+        //Comprobar contraseña
+        var user = await WithProfile().SingleOrDefaultAsync(x => x.Email == email, ct);
         if (user is null || hasher.VerifyHashedPassword(user, user.PasswordHash, input.Password) == PasswordVerificationResult.Failed)
             throw new ApiException(401, "Correo o contraseña incorrectos.");
         var expires = DateTime.UtcNow.AddHours(1);
-        var token = new JwtSecurityToken("EduMonitor", "EduMonitor.Web", [
-            new Claim(ClaimTypes.NameIdentifier,user.Id.ToString()),new Claim(ClaimTypes.Role,user.Role),
-            new Claim(ClaimTypes.Name,user.Name),new Claim("version",user.TokenVersion.ToString())], expires: expires,
+        // Un claim "carrera" por cada carrera del docente: los demás servicios segmentan con ellos.
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()), new(ClaimTypes.Role, user.Role),
+            new(ClaimTypes.Name, user.Name), new("version", user.TokenVersion.ToString())
+        };
+        claims.AddRange(CarrerasDe(user).Select(c => new Claim("carrera", c)));
+        var token = new JwtSecurityToken("EduMonitor", "EduMonitor.Web", claims, expires: expires,
             signingCredentials: new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]!)), SecurityAlgorithms.HmacSha256));
         return new
         {
@@ -31,38 +42,67 @@ public sealed class UsuariosService(UsuariosDb db, IPasswordHasher<User> hasher,
             user = View(user)
         };
     }
-    public async Task<UserView> Me(int id, CancellationToken ct) => View(await db.Users.SingleAsync(x => x.Id == id, ct));
+    public async Task<UserView> Me(int id, CancellationToken ct) => View(await WithProfile().AsNoTracking().SingleAsync(x => x.Id == id, ct));
     public async Task Logout(int id, CancellationToken ct)
     {
         var user = await db.Users.SingleAsync(x => x.Id == id, ct);
         user.TokenVersion++;
         await db.SaveChangesAsync(ct);
     }
-    public Task<List<UserView>> List(CancellationToken ct) => db.Users.AsNoTracking().Where(x => x.Role == "Teacher").OrderBy(x => x.Name).Select(x => new UserView(x.Id, x.Name, x.Email, x.Role)).ToListAsync(ct);
-    public async Task<UserView> Get(int id, CancellationToken ct)
+    // carrera opcional: sirve para elegir docentes de una carrera al asignarlos a un curso.
+    public async Task<List<TeacherView>> List(string? carrera, CancellationToken ct)
     {
-        var user = await db.Users.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id && x.Role == "Teacher", ct);
-        return user is null ? throw new ApiException(404, "Docente no encontrado.") : View(user);
+        var query = WithProfile().AsNoTracking().Where(x => x.Role == "Teacher");
+        if (!string.IsNullOrWhiteSpace(carrera))
+        {
+            var code = carrera.Trim().ToUpperInvariant();
+            query = query.Where(x => x.Profile!.Carreras.Any(c => c.CarreraCodigo == code));
+        }
+        return (await query.OrderBy(x => x.Name).ToListAsync(ct)).Select(TeacherOf).ToList();
     }
-    public async Task<UserView> Save(int? id, TeacherRequest input, CancellationToken ct)
+    public async Task<TeacherView> Get(int id, CancellationToken ct)
+    {
+        var user = await WithProfile().AsNoTracking().SingleOrDefaultAsync(x => x.Id == id && x.Role == "Teacher", ct);
+        return user is null ? throw new ApiException(404, "Docente no encontrado.") : TeacherOf(user);
+    }
+    public async Task<TeacherView> Save(int? id, TeacherRequest input, CancellationToken ct)
     {
         if (id is null && string.IsNullOrWhiteSpace(input.Password))
             throw new ApiException(400, "La contraseña es obligatoria al registrar un docente.");
         var email = input.Email.Trim().ToLowerInvariant();
         if (await db.Users.AnyAsync(x => x.Email == email && x.Id != id, ct))
             throw new ApiException(409, "El correo ya está registrado.");
-        var user = id.HasValue ? await db.Users.SingleOrDefaultAsync(x => x.Id == id && x.Role == "Teacher", ct) ?? throw new ApiException(404, "Docente no encontrado.") : new User();
-        user.Name = input.Name.Trim();
+        if (await db.TeacherProfiles.AnyAsync(x => x.Cedula == input.Cedula && x.UserId != id, ct))
+            throw new ApiException(409, "La cédula ya está registrada.");
+        var carreras = input.Carreras.Select(c => c.Trim().ToUpperInvariant()).Distinct().ToList();
+        if (carreras.Any(c => !Regex.IsMatch(c, "^[A-Z0-9]{2,10}$")))
+            throw new ApiException(400, "Algún código de carrera no es válido.");
+        var user = id.HasValue ? await WithProfile().SingleOrDefaultAsync(x => x.Id == id && x.Role == "Teacher", ct) ?? throw new ApiException(404, "Docente no encontrado.") : new User();
+        var profile = user.Profile ??= new TeacherProfile();
+        var anteriores = profile.Carreras.Select(c => c.CarreraCodigo).Order().ToList();
+        profile.Cedula = input.Cedula;
+        profile.Nombres = input.Nombres.Trim();
+        profile.Apellidos = input.Apellidos.Trim();
+        profile.Telefono = string.IsNullOrWhiteSpace(input.Telefono) ? null : input.Telefono.Trim();
+        profile.TituloAcademico = string.IsNullOrWhiteSpace(input.TituloAcademico) ? null : input.TituloAcademico.Trim();
+        profile.Carreras.RemoveAll(c => !carreras.Contains(c.CarreraCodigo));
+        foreach (var code in carreras.Where(c => profile.Carreras.All(x => x.CarreraCodigo != c)))
+            profile.Carreras.Add(new TeacherCarrera { CarreraCodigo = code });
+        user.Name = $"{profile.Apellidos} {profile.Nombres}";
         user.Email = email;
+        user.Role = "Teacher";
+        // Si cambian la contraseña o las carreras, las sesiones anteriores dejan de valer: el token lleva las carreras.
         if (!string.IsNullOrEmpty(input.Password))
         {
             user.PasswordHash = hasher.HashPassword(user, input.Password);
             user.TokenVersion++;
         }
+        else if (id.HasValue && !anteriores.SequenceEqual(carreras.Order()))
+            user.TokenVersion++;
         if (!id.HasValue)
             db.Users.Add(user);
         await db.SaveChangesAsync(ct);
-        return View(user);
+        return TeacherOf(user);
     }
     public async Task Seed(CancellationToken ct = default)
     {

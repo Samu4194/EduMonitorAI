@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react";
-import { BookOpen, GraduationCap, X, RefreshCw } from "lucide-react";
+import { BookOpen, GraduationCap, X, RefreshCw, Check } from "lucide-react";
 export function Brand() {
   return (
     <div className="brand">
@@ -72,4 +72,23 @@ export function Modal({
       {children}
     </dialog>
   );
+}
+
+// Aviso breve que confirma una acción y se cierra solo.
+export function Toast({ message, close, duration = 6000 }: { message: string; close: () => void; duration?: number }) {
+  useEffect(() => {
+    if (!message) return;
+    const espera = setTimeout(close, duration);
+    return () => clearTimeout(espera);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [message, duration]);
+  return message ? (
+    <div className="toast" role="status" aria-live="polite">
+      <Check size={18} />
+      <span>{message}</span>
+      <button aria-label="Cerrar el aviso" onClick={close}>
+        <X size={16} />
+      </button>
+    </div>
+  ) : null;
 }

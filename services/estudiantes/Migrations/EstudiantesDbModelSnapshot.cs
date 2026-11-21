@@ -22,22 +22,60 @@ namespace EduMonitor.Estudiantes.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("EduMonitor.Estudiantes.Models.Enrollment", b =>
+            modelBuilder.Entity("EduMonitor.Estudiantes.Models.Inscripcion", b =>
                 {
-                    b.Property<int>("MateriaId")
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("BajaEn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Creditos")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CursoId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MallaVersion")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MateriaCodigo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("MateriaNombre")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Nivel")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Paralelo")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("nvarchar(2)");
 
                     b.Property<int>("StudentId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("EnrolledAt")
-                        .HasColumnType("datetime2");
+                    b.HasKey("Id");
 
-                    b.HasKey("MateriaId", "StudentId");
+                    b.HasIndex("CursoId");
 
-                    b.HasIndex("StudentId");
+                    b.HasIndex("StudentId", "CursoId")
+                        .IsUnique();
 
-                    b.ToTable("Enrollments");
+                    b.HasIndex("Nivel", "Paralelo", "MateriaCodigo");
+
+                    b.ToTable("Inscripciones");
                 });
 
             modelBuilder.Entity("EduMonitor.Estudiantes.Models.Student", b =>
@@ -48,38 +86,61 @@ namespace EduMonitor.Estudiantes.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("FirstNames")
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Apellidos")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("LastNames")
+                    b.Property<DateTime?>("BajaEn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CarreraCodigo")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Cedula")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Correo")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("nvarchar(254)");
+
+                    b.Property<string>("Nombres")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("StudentCode")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("StudentCode")
+                    b.HasIndex("CarreraCodigo");
+
+                    b.HasIndex("Cedula")
                         .IsUnique();
 
                     b.ToTable("Students");
                 });
 
-            modelBuilder.Entity("EduMonitor.Estudiantes.Models.Enrollment", b =>
+            modelBuilder.Entity("EduMonitor.Estudiantes.Models.Inscripcion", b =>
                 {
                     b.HasOne("EduMonitor.Estudiantes.Models.Student", "Student")
-                        .WithMany()
+                        .WithMany("Inscripciones")
                         .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("EduMonitor.Estudiantes.Models.Student", b =>
+                {
+                    b.Navigation("Inscripciones");
                 });
 #pragma warning restore 612, 618
         }

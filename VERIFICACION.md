@@ -50,3 +50,18 @@ La prueba de interfaz con Estudiantes detenido mostró el error y el botón Rein
 Se sustituyeron los valores de demostración por Computación Visual (CV-001), Andrés Sebastián Paredes Molina y Valeria Alejandra Torres Cárdenas (EST-001). Se verificó directamente en las tres bases SQL Server la asignación y matrícula. El resultado fue 2 usuarios, 1 materia, 1 estudiante y 1 matrícula. Los identificadores se conservaron.
 
 Se compararon antes y después los correos, roles, hashes y versiones de sesión de todas las cuentas: sin cambios. Se comprobó el login del docente con su contraseña vigente, la lectura de su materia y matrícula y el rechazo 403 al acceso administrativo. No se modificaron React, la arquitectura ni los procesos de inicialización. La admisión de correo institucional se comprobó en la validación EmailAddress del DTO y en el campo HTML de tipo email, sin restricción de dominio y sin registrar una dirección institucional ficticia.
+
+
+## Ajustes del Sprint 1 (deuda técnica) — 9 de noviembre de 2026
+
+Se reestructuró el dominio académico: ficha personal del docente con sus carreras, catálogo de carreras y mallas (5 carreras, 237 materias con créditos y horas), períodos, paralelos y cursos, asignación del docente por carrera, y estudiantes por precarga CSV vinculados a un paralelo. Se eliminó la matrícula.
+
+La solución compila con 0 errores y 0 advertencias, y el build de producción de React (`tsc -b && vite build`) funciona. Las migraciones se aplicaron sobre SQL Server local y el catálogo se cargó solo (5 carreras, 237 materias, 90 paralelos, 474 cursos).
+
+La suite xUnit (`sprint1-ajustes2.trx`) contiene **7 pruebas superadas, 0 fallidas**, contra el despliegue real con SQL Server de Windows: HU-01 (login, roles y cierre de sesión), HU-02 (ficha, duplicados, revocación al cambiar carreras), HU-03 (catálogo, segmentación por carrera, paralelos y asignación), HU-04 (alta, precarga todo o nada, lista por curso sin cédula), aislamiento entre bases y las dos de caída y recuperación (Estudiantes y Materias). Las pruebas limpiaron sus registros: no quedaron docentes, estudiantes ni paralelos de prueba.
+
+Para ejecutar las pruebas con SQL Server de Windows hay que fijar `EDUMONITOR_COMPOSE_FILE=compose.express.yaml` (las pruebas de caída usan `docker compose stop/start`; con otro archivo, Compose arranca servicios que esa configuración no usa).
+
+No se comprobó manualmente la interfaz nueva en el navegador: se verificó que compila, que el paquete servido contiene las pantallas nuevas y el comportamiento de las APIs.
+
+Los datos creados antes del cambio en Materias (2 materias) y Estudiantes (1 estudiante y 1 matrícula) no se conservan: el nuevo modelo no puede representarlos. Se hizo un respaldo previo de las tres bases. Un docente creado antes no tiene ficha ni carreras; se completa desde Docentes → Editar.

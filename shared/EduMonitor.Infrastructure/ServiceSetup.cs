@@ -65,6 +65,8 @@ public static class ServiceSetup
         });
     }
     public static int UserId(this ClaimsPrincipal user) => int.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    // Códigos de las carreras a las que pertenece un docente (claim "carrera" del JWT). El administrador no necesita ninguna: ve todas.
+    public static HashSet<string> Carreras(this ClaimsPrincipal user) => user.FindAll("carrera").Select(c => c.Value).ToHashSet(StringComparer.OrdinalIgnoreCase);
     public record SessionInfo(int Id, string Name, string Email, string Role);
 }
 

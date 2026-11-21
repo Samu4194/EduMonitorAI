@@ -1,6 +1,6 @@
-# EduMonitor AI — Sprint 1
+﻿# EduMonitor AI — Sprint 1 y Sprint 2
 
-Plataforma académica local con React + TypeScript, tres APIs independientes ASP.NET Core 10, Gateway YARP, Entity Framework Core y SQL Server. Interfaz en español. No utiliza Moodle, IA generativa ni servicios externos de IA.
+Plataforma académica local con React + TypeScript, cuatro APIs independientes ASP.NET Core 10, Gateway YARP, Entity Framework Core y SQL Server. Interfaz en español. No utiliza Moodle, IA generativa ni servicios externos de IA.
 
 ## Inicio rápido en este equipo
 
@@ -39,25 +39,30 @@ No hay claves foráneas entre bases, consultas a tablas ajenas desde las APIs ni
 
 | Historia | Implementación |
 |---|---|
-| HU-01 | Login, validaciones, hash de contraseñas, JWT, roles, cierre de sesión, restricciones en backend |
-| HU-02 | Registro, listado, consulta y edición de docentes; cuenta de acceso; correo único |
-| HU-03 | Materias con código, nombre y período académico; edición; asignación/reasignación a un docente; código único |
-| HU-04 | Estudiantes con código, nombres y apellidos; edición; matrícula; prevención de duplicados; lista por materia autorizada |
+| HU-01 | Login, validaciones, hash de contraseñas, JWT con las carreras del docente, roles, cierre de sesión, restricciones en backend |
+| HU-02 | Registro, consulta y edición de docentes con su ficha personal (cédula, nombres, apellidos, correo institucional, teléfono, título) y sus carreras; correo y cédula únicos |
+| HU-03 | Catálogo de carreras (alta con código y prefijo UTA únicos asignados por el sistema; baja lógica y reactivación) y mallas curriculares versionadas, cargadas por CSV solo con el período en preparación (créditos y horas), períodos, paralelos y cursos; asignación del docente a una materia en un paralelo, solo entre los docentes de esa carrera |
+| HU-04 | Estudiantes por precarga CSV a una materia de un paralelo (el destino —carrera, nivel, paralelo y materia— siempre se elige al cargar); un estudiante puede cursar materias de distintos niveles y paralelos con cargas independientes, hasta 15 créditos por período; retiro por materia y baja del estudiante; lista de estudiantes de un curso para el docente asignado. Sin matrícula manual |
+| HU-05 | El docente registra, consulta, edita, reordena y elimina unidades, temas y contenidos mínimos de cada uno de sus cursos (servicio Evaluaciones) |
+| HU-06 | Tareas, APE y exámenes de un curso, relacionados con uno o varios temas del mismo curso; filtros por tipo y tema |
+| HU-07 | Calificaciones sobre 10 de los estudiantes precargados del paralelo; ponderaciones por tipo editables (por defecto 30/30/40, deben sumar 100) y nota mínima (7); las notas pendientes no cuentan como cero |
+| HU-08 | Promedio del grupo, estudiantes en riesgo, calificación más baja, resultados por estudiante y rendimiento por tema, con filtros de unidad, tema y estudiante |
 
-La materia puede registrarse sin docente y asignarse después. Solo puede tener un responsable. El estudiante no tiene cuenta de acceso y no necesita correo. No se exige especialidad al docente. No hay acciones de eliminación, retiro de matrículas, calificaciones, asistencia ni funcionalidades de los Sprints 2 y 3.
+El catálogo sale de las mallas curriculares de la facultad (5 carreras, 237 materias) y se carga solo cuando la base de Materias está vacía. Un **curso** es una materia en un paralelo; se crea sin docente al crear el paralelo y el administrador lo asigna después. Cada docente solo ve sus carreras y sus cursos. El estudiante no tiene cuenta de acceso. Los estudiantes no se borran: el administrador los da de baja (dejan de aparecer en listas y notas, que se conservan) y puede reactivarlos, a mano o al volver a venir en un CSV. No hay asistencia ni las funcionalidades del Sprint 3 (agente de recomendaciones).
 
-Los paneles muestran datos reales. Cada módulo consulta su propio endpoint: una caída de Estudiantes no bloquea la carga de Materias o Docentes.
+**Gestión académica (Sprint 2).** Unidades, temas, contenidos, actividades y calificaciones cuelgan de un *curso* (materia + paralelo) y viven en su propio servicio, `evaluaciones`, con su base `EduMonitor_Evaluaciones`. Ese servicio no guarda docentes ni estudiantes: pregunta a Materias si el curso es del docente que consulta (con el JWT reenviado; un curso ajeno responde 404) y a Estudiantes por la lista del paralelo. Solo el docente del curso puede escribir; el administrador solo consulta. Reglas de cálculo: cada tipo de actividad se promedia, y el resultado es el promedio ponderado de los tipos que ya tienen notas; mientras queden actividades pendientes se marca como parcial. Las pantallas de gestión académica aparecen en el portal del docente.
+
+Los paneles muestran datos reales. Cada módulo consulta su propio endpoint: una caída de Estudiantes no bloquea la carga de Carreras, Cursos o Docentes.
 
 ## Presentación del flujo completo
 
 1. Inicia sesión como administrador.
-2. En **Docentes**, registra nombre, correo y contraseña de al menos 10 caracteres.
-3. En **Materias**, registra código, nombre y período académico. Elige un docente o selecciona **Asignar después**.
-4. Para asignar o cambiar el docente, usa **Editar / asignar** en la materia.
-5. En **Estudiantes**, registra código, nombres y apellidos.
-6. En **Materias → Ver estudiantes**, selecciona al estudiante y pulsa **Matricular**.
-7. Cierra sesión e ingresa con el correo y contraseña del docente. Solo tendrá Resumen y Materias, con acceso a sus materias y estudiantes.
-8. La restricción también se aplica a peticiones directas a las APIs. Las pruebas incluyen acceso ajeno y operaciones administrativas prohibidas.
+2. En **Carreras y mallas**, revisa una carrera y su malla con créditos y horas.
+3. En **Docentes**, registra la ficha (cédula, nombres, apellidos, correo institucional, teléfono, título), las carreras a las que pertenece y una contraseña de al menos 10 caracteres.
+4. En **Cursos**, elige carrera y nivel. Si hace falta, **Agregar paralelo**. Asigna un docente a cada materia: solo aparecen los de esa carrera.
+5. En **Estudiantes**, usa **Cargar CSV** (hay una plantilla descargable): elige carrera, nivel, paralelo y materia, y sube un archivo con `cedula, apellidos, nombres, correo`. Cada carga es de una materia; para inscribir a los mismos estudiantes en otra materia, paralelo o nivel se vuelve a cargar el archivo con ese destino. El sistema aplica las reglas: hasta 15 créditos por período, una materia en un solo paralelo y una sola carrera por estudiante.
+6. Cierra sesión e ingresa con el correo y contraseña del docente. Solo tendrá Resumen, Carreras y Mis cursos; en cada curso, **Ver estudiantes** muestra la lista de su paralelo.
+7. La restricción también se aplica a peticiones directas a las APIs. Las pruebas incluyen acceso ajeno, carrera ajena y operaciones administrativas prohibidas.
 
 El JWT vive en memoria del navegador y vence en una hora. Al recargar la página debes iniciar sesión otra vez. Cerrar sesión o cambiar una contraseña invalida los tokens anteriores. Cada API valida la firma; Materias y Estudiantes consultan además a Usuarios para confirmar que la sesión sigue vigente. Por eso **Usuarios es una dependencia necesaria para las operaciones autenticadas**: si cae, se responde de forma controlada y se deniega la operación. No se promete independencia frente a todas las posibles caídas.
 
@@ -72,7 +77,7 @@ docker compose stop estudiantes
 Vuelve al navegador:
 
 - Puedes iniciar sesión y consultar Docentes y Materias.
-- Estudiantes y las matrículas muestran un error con **Reintentar**.
+- Estudiantes muestra un error con **Reintentar**.
 - El Gateway devuelve HTTP 503 para las peticiones a Estudiantes.
 - Ninguna pantalla queda cargando indefinidamente: el cliente tiene un límite de 14 segundos.
 
@@ -101,7 +106,7 @@ powershell -ExecutionPolicy Bypass -File scripts/Demo-Fallo.ps1 -Action start
 - YARP limita la inactividad de la petición a 10 segundos; Nginx limita la espera a 12 segundos.
 - `restart: unless-stopped` reinicia contenedores que terminan inesperadamente. **Un `docker compose stop` es una parada voluntaria y requiere `start`.**
 - Un estado `unhealthy` por sí solo no reinicia un contenedor en Docker Compose. No hay un sistema de autoreparación por health check ni circuit breakers avanzados.
-- Si Materias cae, Estudiantes puede listar sus registros, pero rechaza matrículas y consultas por materia con 503: no guarda relaciones ni autoriza listas sin validar.
+- Si Materias cae, Estudiantes puede listar sus registros, pero rechaza altas, precargas y listas por curso con 503: no guarda datos ni autoriza listas sin validar la carrera, el paralelo y el curso.
 
 ### Fallo inesperado del proceso (demostración opcional)
 
@@ -126,7 +131,7 @@ Con los contenedores levantados y el SDK .NET 10 disponible:
 powershell -ExecutionPolicy Bypass -File scripts/Test.ps1
 ```
 
-La suite usa HTTP real a través de Nginx y YARP, los tres microservicios y SQL Server real. No usa mocks ni EF InMemory. Comprueba las cuatro historias, la comunicación entre servicios, la caída/recuperación de Estudiantes y el rechazo de matrículas si Materias está caído. Las pruebas de disponibilidad detienen servicios brevemente: no las ejecutes mientras otra persona está usando la demostración.
+La suite usa HTTP real a través de Nginx y YARP, los cuatro microservicios y SQL Server real. No usa mocks ni EF InMemory. Comprueba las ocho historias (Sprint 1: inicio de sesión, ficha de docentes, catálogo con paralelos y asignación por carrera, precarga de estudiantes y lista por curso; Sprint 2: contenidos, actividades, calificaciones con ponderaciones y rendimiento), el aislamiento entre bases, la caída/recuperación de Estudiantes y Evaluaciones y el rechazo de cambios de estudiantes si Materias está caído. Son 23 pruebas. Las cédulas de docentes y estudiantes se validan como cédulas ecuatorianas (10 dígitos numéricos y dígito verificador). Las pruebas de disponibilidad detienen servicios brevemente: no las ejecutes mientras otra persona está usando la demostración.
 
 Cada prueba crea registros con un prefijo aleatorio propio y los elimina mediante una conexión SQL de pruebas al terminar; no elimina datos del usuario. Si se interrumpe la suite por fuerza pueden quedar registros identificados como pruebas. No existe endpoint público de borrado.
 
@@ -162,17 +167,17 @@ No ejecutes `docker compose down -v`: elimina el volumen que conserva las bases.
 | SQL Server desde VS Code / SSMS | `127.0.0.1,14333` |
 | Gateway y APIs | Puerto 8080 interno; no publicados en el equipo |
 
-Las bases se llaman `EduMonitor_Usuarios`, `EduMonitor_Materias` y `EduMonitor_Estudiantes`. Las contraseñas están en `.local/settings.json`: `UsuariosPassword`, `MateriasPassword`, `EstudiantesPassword`. Los usuarios SQL son `edumonitor_usuarios`, `edumonitor_materias` y `edumonitor_estudiantes`. `SqlPassword` corresponde al administrador SQL `sa`, usado para inicialización y pruebas. Todo esto es configuración local de desarrollo, no para exponer a Internet.
+Las bases se llaman `EduMonitor_Usuarios`, `EduMonitor_Materias`, `EduMonitor_Estudiantes` y `EduMonitor_Evaluaciones`. Las contraseñas están en `.local/settings.json`: `UsuariosPassword`, `MateriasPassword`, `EstudiantesPassword`, `EvaluacionesPassword`. Los usuarios SQL son `edumonitor_usuarios`, `edumonitor_materias`, `edumonitor_estudiantes` y `edumonitor_evaluaciones`. `SqlPassword` corresponde al administrador SQL `sa`, usado para inicialización y pruebas. Todo esto es configuración local de desarrollo, no para exponer a Internet.
 
-La comunicación interna utiliza los nombres `usuarios`, `materias`, `estudiantes`, `gateway` y `sqlserver`. Las solicitudes internas reenvían el JWT original, de modo que el servicio receptor comprueba la identidad y los permisos. No se utiliza un indicador de rol enviado libremente por React.
+La comunicación interna utiliza los nombres `usuarios`, `materias`, `estudiantes`, `evaluaciones`, `gateway` y `sqlserver`. Las solicitudes internas reenvían el JWT original, de modo que el servicio receptor comprueba la identidad y los permisos. No se utiliza un indicador de rol enviado libremente por React.
 
 ## Estructura y desarrollo
 
 ```text
 frontend/                         React, TypeScript, Nginx y Dockerfile
 services/usuarios/                API, servicios de negocio, modelos, DTO, DbContext y migraciones
-services/materias/                API independiente de materias
-services/estudiantes/             API independiente de estudiantes y matrículas
+services/materias/                API académica: carreras, mallas, períodos, paralelos y cursos
+services/estudiantes/             API de estudiantes: precarga CSV y lista por curso
 gateway/                          API Gateway YARP
 shared/EduMonitor.Infrastructure/  Autenticación, errores y cliente HTTP
 database/                         Creación de bases/permisos e importación del admin anterior
@@ -211,7 +216,7 @@ El importador comprueba esa condición y se detiene si encuentra datos académic
 
 ## Continuación del proyecto
 
-Sprint 2 podrá ampliar Materias con unidades, temas y actividades y añadir calificaciones y seguimiento mediante referencias a estudiantes. Sprint 3 podrá incorporar un servicio C# de recomendaciones deterministas. Esas historias no se implementan ni se simulan en este sprint.
+El Sprint 3 podrá incorporar un servicio C# de recomendaciones deterministas que lea las calificaciones y el rendimiento del servicio Evaluaciones. Esas historias no se implementan ni se simulan todavía.
 
 
 ## Documentos de apoyo
@@ -220,6 +225,6 @@ Sprint 2 podrá ampliar Materias con unidades, temas y actividades y añadir cal
 - [Contratos de la API](docs/API.md).
 - [Verificación realizada](VERIFICACION.md).
 
-Los datos de demostración creados desde el navegador se conservan: docente de demostración, materia CV-001 y estudiante EST-001 matriculado. Su acceso docente está en .local/DEMO.txt; no lo compartas con los fuentes.
+El catálogo (carreras y materias) y los paralelos A y B se cargan solos en una base nueva. Los docentes y los estudiantes no se siembran: se crean desde la interfaz con datos ficticios. Si guardas credenciales de demostración en .local/DEMO.txt, no las compartas con los fuentes.
 
 

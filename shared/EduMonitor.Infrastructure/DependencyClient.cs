@@ -20,7 +20,7 @@ public sealed class DependencyClient(HttpClient http, IHttpContextAccessor acces
             {
                 using var response = await http.SendAsync(request, ct);
                 if (response.StatusCode == HttpStatusCode.NotFound)
-                    throw new ApiException(404, "La materia o el docente solicitado no existe o no está autorizado.");
+                    throw new ApiException(404, "El curso, el docente o la carrera solicitados no existen o no están autorizados.");
                 if (response.StatusCode == HttpStatusCode.Forbidden)
                     throw new ApiException(403, "No tienes permiso para esta operación.");
                 if (response.StatusCode == HttpStatusCode.Unauthorized)
