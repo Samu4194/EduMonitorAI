@@ -1,0 +1,7 @@
+[
+  { "codigo": "SOF", "nombre": "Software", "prefijo_uta": "0808", "modalidad": "Presencial", "niveles": 9, "horas_totales": 6480, "creditos_totales": 135 },
+  { "codigo": "TI", "nombre": "Tecnologías de la Información", "prefijo_uta": "0806", "modalidad": "Presencial", "niveles": 9, "horas_totales": 6480, "creditos_totales": 135 },
+  { "codigo": "TEL", "nombre": "Telecomunicaciones", "prefijo_uta": "0805", "modalidad": "Presencial", "niveles": 9, "horas_totales": 6480, "creditos_totales": 135 },
+  { "codigo": "IND", "nombre": "Ingeniería Industrial", "prefijo_uta": "0807", "modalidad": "Presencial", "niveles": 9, "horas_totales": 6480, "creditos_totales": 135 },
+  { "codigo": "AUT", "nombre": "Automatización y Robótica", "prefijo_uta": "0809", "modalidad": "Presencial", "niveles": 9, "horas_totales": 6480, "creditos_totales": 135 }
+]

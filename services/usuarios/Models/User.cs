@@ -14,4 +14,32 @@ public class User
     {
         get; set;
     }
+    public TeacherProfile? Profile { get; set; }
+}
+
+// Datos personales del docente, separados de las credenciales de acceso.
+public class TeacherProfile
+{
+    public int UserId
+    {
+        get; set;
+    }
+    public User User { get; set; } = null!;
+    public string Cedula { get; set; } = "";
+    public string Nombres { get; set; } = "";
+    public string Apellidos { get; set; } = "";
+    public string? Telefono { get; set; }
+    public string? TituloAcademico { get; set; }
+    public List<TeacherCarrera> Carreras { get; set; } = [];
+}
+
+// Código de carrera del servicio de Materias. Es una referencia: no hay clave foránea entre bases.
+public class TeacherCarrera
+{
+    public int UserId
+    {
+        get; set;
+    }
+    public TeacherProfile Profile { get; set; } = null!;
+    public string CarreraCodigo { get; set; } = "";
 }

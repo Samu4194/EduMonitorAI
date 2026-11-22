@@ -18,7 +18,7 @@ if (!(Test-Path $SettingsPath)) {
     @('EduMonitor AI - acceso local', "Correo: $($settings.AdminEmail)", "Contraseña: $($settings.AdminPassword)", '', 'Conserva este archivo en privado.') | Set-Content -LiteralPath (Join-Path $LocalDir 'ACCESO.txt') -Encoding UTF8
 }
 $Settings = Get-Content -LiteralPath $SettingsPath -Raw | ConvertFrom-Json
-foreach ($name in @('UsuariosPassword','MateriasPassword','EstudiantesPassword')) {
+foreach ($name in @('UsuariosPassword','MateriasPassword','EstudiantesPassword','EvaluacionesPassword')) {
     if (!$Settings.PSObject.Properties[$name]) { $Settings | Add-Member -NotePropertyName $name -NotePropertyValue ('Db9!'+(New-Secret)) }
 }
 $Settings | ConvertTo-Json | Set-Content -LiteralPath $SettingsPath -Encoding UTF8
@@ -32,6 +32,7 @@ $env:ADMIN_PASSWORD=$Settings.AdminPassword
 $env:USUARIOS_PASSWORD=$Settings.UsuariosPassword
 $env:MATERIAS_PASSWORD=$Settings.MateriasPassword
 $env:ESTUDIANTES_PASSWORD=$Settings.EstudiantesPassword
+$env:EVALUACIONES_PASSWORD=$Settings.EvaluacionesPassword
 $env:ConnectionStrings__Default="Server=127.0.0.1,14333;Database=EduMonitor_Usuarios;User Id=sa;Password=$($Settings.SqlPassword);TrustServerCertificate=True;Encrypt=True"
 $lines=@(
     "MSSQL_SA_PASSWORD=$($Settings.SqlPassword)"
@@ -41,6 +42,7 @@ $lines=@(
     "USUARIOS_PASSWORD=$($Settings.UsuariosPassword)"
     "MATERIAS_PASSWORD=$($Settings.MateriasPassword)"
     "ESTUDIANTES_PASSWORD=$($Settings.EstudiantesPassword)"
+    "EVALUACIONES_PASSWORD=$($Settings.EvaluacionesPassword)"
 )
 [System.IO.File]::WriteAllLines((Join-Path $ProjectRoot '.env'),$lines,(New-Object System.Text.UTF8Encoding $false))
 function Assert-Exit([string]$Step) { if ($LASTEXITCODE -ne 0) { throw "$Step falló (código $LASTEXITCODE)." } }

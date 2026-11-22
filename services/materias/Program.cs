@@ -8,7 +8,13 @@ builder.Services.AddDbContext<MateriasDb>(o => o.UseSqlServer(builder.Configurat
 builder.Services.AddScoped<MateriasService>();
 var app = builder.Build();
 app.UseEduMonitor<MateriasDb>();
-if (builder.Configuration.GetValue<bool>("Database:Initialize")) { using var scope = app.Services.CreateScope(); await scope.ServiceProvider.GetRequiredService<MateriasDb>().Database.MigrateAsync(); }
+if (builder.Configuration.GetValue<bool>("Database:Initialize"))
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<MateriasDb>();
+    await db.Database.MigrateAsync();
+    await CatalogoSeed.Aplicar(db);
+}
 app.Run();
 public partial class Program
 {

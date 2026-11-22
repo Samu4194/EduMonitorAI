@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1560" height="1910" viewBox="0 0 1560 1910" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <defs><marker id="flecha" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 1 L9 5 L0 9 Z" fill="#fff"/></marker></defs>
+  <rect width="100%" height="100%" fill="#1d1f23"/>
+  <text x="46" y="52" fill="#ffffff" font-size="24" font-weight="700">HU-06 · Gestión de actividades y evaluaciones</text>
+  <text x="1514" y="52" fill="#8a929d" font-size="14" text-anchor="end">EduMonitor AI · Sprint 2 · Diagrama de secuencia</text>
+  <line x1="135" y1="156" x2="135" y2="1816" stroke="#d9dde3" stroke-width="1.4" opacity="0.85"/><line x1="457.5" y1="156" x2="457.5" y2="1816" stroke="#d9dde3" stroke-width="1.4" opacity="0.85"/><line x1="780" y1="156" x2="780" y2="1816" stroke="#d9dde3" stroke-width="1.4" opacity="0.85"/><line x1="1102.5" y1="156" x2="1102.5" y2="1816" stroke="#d9dde3" stroke-width="1.4" opacity="0.85"/><line x1="1425" y1="156" x2="1425" y2="1816" stroke="#d9dde3" stroke-width="1.4" opacity="0.85"/>
+  <g>
+    <rect x="30" y="92" width="210" height="64" rx="10" fill="#11151b" stroke="#8be04e" stroke-width="2"/>
+    <circle cx="66" cy="118" r="6" stroke="#8be04e" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M55 137 Q55 126 66 126 Q77 126 77 137 Z" stroke="#8be04e" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="96" y="129" fill="#8be04e" font-size="17" font-weight="600">Docente</text>
+  </g><g>
+    <rect x="352.5" y="92" width="210" height="64" rx="10" fill="#11151b" stroke="#b27cff" stroke-width="2"/>
+    <rect x="376.5" y="114" width="24" height="16" rx="2" stroke="#b27cff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M372.5 136 H404.5" stroke="#b27cff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="418.5" y="129" fill="#b27cff" font-size="17" font-weight="600">App Web</text>
+  </g><g>
+    <rect x="675" y="92" width="210" height="64" rx="10" fill="#11151b" stroke="#ffb020" stroke-width="2"/>
+    <circle cx="711" cy="124" r="9" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="711" cy="124" r="3.5" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="720" y1="124" x2="725" y2="124" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="717.363961030679" y1="130.36396103067892" x2="720.8994949366116" y2="133.89949493661166" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="711" y1="133" x2="711" y2="138" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="704.636038969321" y1="130.36396103067892" x2="701.1005050633884" y2="133.89949493661166" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="702" y1="124" x2="697" y2="124" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="704.636038969321" y1="117.63603896932108" x2="701.1005050633884" y2="114.10050506338834" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="711" y1="115" x2="711" y2="110" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="717.363961030679" y1="117.63603896932108" x2="720.8994949366116" y2="114.10050506338834" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="741" y="129" fill="#ffb020" font-size="17" font-weight="600">API Evaluaciones</text>
+  </g><g>
+    <rect x="997.5" y="92" width="210" height="64" rx="10" fill="#11151b" stroke="#2dd4bf" stroke-width="2"/>
+    <path d="M1019.5 115 H1031.5 Q1033.5 115 1033.5 117 V135 Q1033.5 133 1031.5 133 H1019.5 Z M1047.5 115 H1035.5 Q1033.5 115 1033.5 117 V135 Q1033.5 133 1035.5 133 H1047.5 Z" stroke="#2dd4bf" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="1063.5" y="120.5" fill="#2dd4bf" font-size="17" font-weight="600">API Materias y</text><text x="1063.5" y="137.5" fill="#2dd4bf" font-size="17" font-weight="600">Estudiantes</text>
+  </g><g>
+    <rect x="1320" y="92" width="210" height="64" rx="10" fill="#11151b" stroke="#4cc3ff" stroke-width="2"/>
+    <ellipse cx="1356" cy="115" rx="11" ry="4.5" stroke="#4cc3ff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M1345 115 V133 Q1345 138 1356 138 Q1367 138 1367 133 V115" stroke="#4cc3ff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M1345 124 Q1345 128.5 1356 128.5 Q1367 128.5 1367 124" stroke="#4cc3ff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="1386" y="129" fill="#4cc3ff" font-size="17" font-weight="600">Base de Datos</text>
+  </g>
+  <rect x="46" y="184" width="1468" height="38" rx="3" fill="#123022" stroke="#2f7a52" stroke-width="1.5"/>
+      <text x="780" y="209" fill="#8be04e" font-size="17" font-weight="700" text-anchor="middle">FASE 1: Consulta de las actividades del curso</text>
+<line x1="135" y1="278" x2="453.5" y2="278" stroke="#fff" stroke-width="1.6"  marker-end="url(#flecha)"/>
+<text x="296.25" y="251" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Abre la pestaña Actividades</text><text x="296.25" y="268" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">del curso</text>
+<line x1="457.5" y1="352" x2="776" y2="352" stroke="#fff" stroke-width="1.6"  marker-end="url(#flecha)"/>
+<text x="618.75" y="325" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Solicita las actividades</text><text x="618.75" y="342" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">del curso</text>
+<line x1="780" y1="426" x2="1098.5" y2="426" stroke="#fff" stroke-width="1.6"  marker-end="url(#flecha)"/>
+<text x="941.25" y="399" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Verifica que el curso</text><text x="941.25" y="416" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">pertenece al docente</text>
+<line x1="1102.5" y1="483" x2="784" y2="483" stroke="#fff" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#flecha)"/>
+<text x="941.25" y="473" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Confirma el curso</text>
+<line x1="780" y1="557" x2="1421" y2="557" stroke="#fff" stroke-width="1.6"  marker-end="url(#flecha)"/>
+<text x="1102.5" y="530" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Consulta actividades y cuántas</text><text x="1102.5" y="547" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">notas tiene cada una</text>
+<line x1="1425" y1="631" x2="784" y2="631" stroke="#fff" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#flecha)"/>
+<text x="1102.5" y="604" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Devuelve actividades</text><text x="1102.5" y="621" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">y calificadas</text>
+<line x1="780" y1="688" x2="461.5" y2="688" stroke="#fff" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#flecha)"/>
+<text x="618.75" y="678" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Responde la lista de actividades</text>
+<line x1="457.5" y1="762" x2="139" y2="762" stroke="#fff" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#flecha)"/>
+<text x="296.25" y="735" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Muestra la tabla con filtro por</text><text x="296.25" y="752" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Tareas, APE y Exámenes</text>
+<rect x="46" y="808" width="1468" height="38" rx="3" fill="#123022" stroke="#2f7a52" stroke-width="1.5"/>
+      <text x="780" y="833" fill="#8be04e" font-size="17" font-weight="700" text-anchor="middle">FASE 2: Registro o edición de una actividad</text>
+<line x1="135" y1="902" x2="453.5" y2="902" stroke="#fff" stroke-width="1.6"  marker-end="url(#flecha)"/>
+<text x="296.25" y="875" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Completa nombre, tipo (Tarea, APE</text><text x="296.25" y="892" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">o Examen), fecha e indicaciones</text>
+<line x1="457.5" y1="959" x2="776" y2="959" stroke="#fff" stroke-width="1.6"  marker-end="url(#flecha)"/>
+<text x="618.75" y="949" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Envía los datos de la actividad</text>
+<path d="M780 1021 h26 a10 10 0 0 1 0 22 h-26" fill="none" stroke="#fff" stroke-width="1.6" marker-end="url(#flecha)"/>
+<text x="832" y="1027" fill="#f2f2f2" font-size="14" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Valida tipo, nombre único por</text><text x="832" y="1044" fill="#f2f2f2" font-size="14" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">tipo y período no finalizado</text>
+<line x1="780" y1="1113" x2="1421" y2="1113" stroke="#fff" stroke-width="1.6"  marker-end="url(#flecha)"/>
+<text x="1102.5" y="1086" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Guarda la actividad</text><text x="1102.5" y="1103" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">en el curso</text>
+<line x1="1425" y1="1170" x2="784" y2="1170" stroke="#fff" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#flecha)"/>
+<text x="1102.5" y="1160" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Confirma el guardado</text>
+<line x1="780" y1="1227" x2="461.5" y2="1227" stroke="#fff" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#flecha)"/>
+<text x="618.75" y="1217" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Devuelve la actividad</text>
+<line x1="457.5" y1="1301" x2="139" y2="1301" stroke="#fff" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#flecha)"/>
+<text x="296.25" y="1274" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Muestra el aviso y actualiza</text><text x="296.25" y="1291" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">los indicadores del curso</text>
+<rect x="46" y="1347" width="1468" height="38" rx="3" fill="#123022" stroke="#2f7a52" stroke-width="1.5"/>
+      <text x="780" y="1372" fill="#8be04e" font-size="17" font-weight="700" text-anchor="middle">FASE 3: Eliminación y paso a calificar</text>
+<line x1="135" y1="1441" x2="453.5" y2="1441" stroke="#fff" stroke-width="1.6"  marker-end="url(#flecha)"/>
+<text x="296.25" y="1414" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Elimina una actividad (confirma</text><text x="296.25" y="1431" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">que pierde sus notas) o pulsa Calificar</text>
+<line x1="457.5" y1="1498" x2="776" y2="1498" stroke="#fff" stroke-width="1.6"  marker-end="url(#flecha)"/>
+<text x="618.75" y="1488" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Solicita eliminar la actividad</text>
+<line x1="780" y1="1572" x2="1421" y2="1572" stroke="#fff" stroke-width="1.6"  marker-end="url(#flecha)"/>
+<text x="1102.5" y="1545" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Elimina la actividad y sus</text><text x="1102.5" y="1562" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">calificaciones asociadas</text>
+<line x1="1425" y1="1629" x2="784" y2="1629" stroke="#fff" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#flecha)"/>
+<text x="1102.5" y="1619" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Confirma la eliminación</text>
+<line x1="780" y1="1686" x2="461.5" y2="1686" stroke="#fff" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#flecha)"/>
+<text x="618.75" y="1676" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Confirma la operación</text>
+<line x1="457.5" y1="1760" x2="139" y2="1760" stroke="#fff" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#flecha)"/>
+<text x="296.25" y="1733" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Actualiza la lista o abre</text><text x="296.25" y="1750" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Calificaciones con esa actividad</text>
+  <circle cx="135" cy="278" r="14" fill="#8be04e"/><text x="135" y="283" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">1</text>
+<circle cx="457.5" cy="352" r="14" fill="#b27cff"/><text x="457.5" y="357" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">2</text>
+<circle cx="780" cy="426" r="14" fill="#ffb020"/><text x="780" y="431" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">3</text>
+<circle cx="1102.5" cy="483" r="14" fill="#2dd4bf"/><text x="1102.5" y="488" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">4</text>
+<circle cx="780" cy="557" r="14" fill="#ffb020"/><text x="780" y="562" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">5</text>
+<circle cx="1425" cy="631" r="14" fill="#4cc3ff"/><text x="1425" y="636" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">6</text>
+<circle cx="780" cy="688" r="14" fill="#ffb020"/><text x="780" y="693" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">7</text>
+<circle cx="457.5" cy="762" r="14" fill="#b27cff"/><text x="457.5" y="767" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">8</text>
+<circle cx="135" cy="902" r="14" fill="#8be04e"/><text x="135" y="907" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">9</text>
+<circle cx="457.5" cy="959" r="14" fill="#b27cff"/><text x="457.5" y="964" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">10</text>
+<circle cx="780" cy="1032" r="14" fill="#ffb020"/><text x="780" y="1037" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">11</text>
+<circle cx="780" cy="1113" r="14" fill="#ffb020"/><text x="780" y="1118" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">12</text>
+<circle cx="1425" cy="1170" r="14" fill="#4cc3ff"/><text x="1425" y="1175" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">13</text>
+<circle cx="780" cy="1227" r="14" fill="#ffb020"/><text x="780" y="1232" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">14</text>
+<circle cx="457.5" cy="1301" r="14" fill="#b27cff"/><text x="457.5" y="1306" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">15</text>
+<circle cx="135" cy="1441" r="14" fill="#8be04e"/><text x="135" y="1446" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">16</text>
+<circle cx="457.5" cy="1498" r="14" fill="#b27cff"/><text x="457.5" y="1503" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">17</text>
+<circle cx="780" cy="1572" r="14" fill="#ffb020"/><text x="780" y="1577" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">18</text>
+<circle cx="1425" cy="1629" r="14" fill="#4cc3ff"/><text x="1425" y="1634" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">19</text>
+<circle cx="780" cy="1686" r="14" fill="#ffb020"/><text x="780" y="1691" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">20</text>
+<circle cx="457.5" cy="1760" r="14" fill="#b27cff"/><text x="457.5" y="1765" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">21</text>
+  <g>
+    <rect x="30" y="1816" width="210" height="64" rx="10" fill="#11151b" stroke="#8be04e" stroke-width="2"/>
+    <circle cx="66" cy="1842" r="6" stroke="#8be04e" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M55 1861 Q55 1850 66 1850 Q77 1850 77 1861 Z" stroke="#8be04e" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="96" y="1853" fill="#8be04e" font-size="17" font-weight="600">Docente</text>
+  </g><g>
+    <rect x="352.5" y="1816" width="210" height="64" rx="10" fill="#11151b" stroke="#b27cff" stroke-width="2"/>
+    <rect x="376.5" y="1838" width="24" height="16" rx="2" stroke="#b27cff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M372.5 1860 H404.5" stroke="#b27cff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="418.5" y="1853" fill="#b27cff" font-size="17" font-weight="600">App Web</text>
+  </g><g>
+    <rect x="675" y="1816" width="210" height="64" rx="10" fill="#11151b" stroke="#ffb020" stroke-width="2"/>
+    <circle cx="711" cy="1848" r="9" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="711" cy="1848" r="3.5" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="720" y1="1848" x2="725" y2="1848" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="717.363961030679" y1="1854.3639610306789" x2="720.8994949366116" y2="1857.8994949366117" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="711" y1="1857" x2="711" y2="1862" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="704.636038969321" y1="1854.3639610306789" x2="701.1005050633884" y2="1857.8994949366117" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="702" y1="1848" x2="697" y2="1848" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="704.636038969321" y1="1841.6360389693211" x2="701.1005050633884" y2="1838.1005050633883" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="711" y1="1839" x2="711" y2="1834" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="717.363961030679" y1="1841.6360389693211" x2="720.8994949366116" y2="1838.1005050633883" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="741" y="1853" fill="#ffb020" font-size="17" font-weight="600">API Evaluaciones</text>
+  </g><g>
+    <rect x="997.5" y="1816" width="210" height="64" rx="10" fill="#11151b" stroke="#2dd4bf" stroke-width="2"/>
+    <path d="M1019.5 1839 H1031.5 Q1033.5 1839 1033.5 1841 V1859 Q1033.5 1857 1031.5 1857 H1019.5 Z M1047.5 1839 H1035.5 Q1033.5 1839 1033.5 1841 V1859 Q1033.5 1857 1035.5 1857 H1047.5 Z" stroke="#2dd4bf" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="1063.5" y="1844.5" fill="#2dd4bf" font-size="17" font-weight="600">API Materias y</text><text x="1063.5" y="1861.5" fill="#2dd4bf" font-size="17" font-weight="600">Estudiantes</text>
+  </g><g>
+    <rect x="1320" y="1816" width="210" height="64" rx="10" fill="#11151b" stroke="#4cc3ff" stroke-width="2"/>
+    <ellipse cx="1356" cy="1839" rx="11" ry="4.5" stroke="#4cc3ff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M1345 1839 V1857 Q1345 1862 1356 1862 Q1367 1862 1367 1857 V1839" stroke="#4cc3ff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M1345 1848 Q1345 1852.5 1356 1852.5 Q1367 1852.5 1367 1848" stroke="#4cc3ff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="1386" y="1853" fill="#4cc3ff" font-size="17" font-weight="600">Base de Datos</text>
+  </g>
+</svg>

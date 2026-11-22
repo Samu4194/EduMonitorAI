@@ -21,6 +21,56 @@ namespace EduMonitor.Usuarios.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("EduMonitor.Usuarios.Models.TeacherCarrera", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CarreraCodigo")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.HasKey("UserId", "CarreraCodigo");
+
+                    b.ToTable("TeacherCarrera");
+                });
+
+            modelBuilder.Entity("EduMonitor.Usuarios.Models.TeacherProfile", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Apellidos")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Cedula")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Nombres")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Telefono")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("TituloAcademico")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.HasKey("UserId");
+
+                    b.HasIndex("Cedula")
+                        .IsUnique();
+
+                    b.ToTable("TeacherProfiles");
+                });
+
             modelBuilder.Entity("EduMonitor.Usuarios.Models.User", b =>
                 {
                     b.Property<int>("Id")
@@ -36,8 +86,8 @@ namespace EduMonitor.Usuarios.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("nvarchar(120)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -57,6 +107,38 @@ namespace EduMonitor.Usuarios.Migrations
                         .IsUnique();
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("EduMonitor.Usuarios.Models.TeacherCarrera", b =>
+                {
+                    b.HasOne("EduMonitor.Usuarios.Models.TeacherProfile", "Profile")
+                        .WithMany("Carreras")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Profile");
+                });
+
+            modelBuilder.Entity("EduMonitor.Usuarios.Models.TeacherProfile", b =>
+                {
+                    b.HasOne("EduMonitor.Usuarios.Models.User", "User")
+                        .WithOne("Profile")
+                        .HasForeignKey("EduMonitor.Usuarios.Models.TeacherProfile", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("EduMonitor.Usuarios.Models.TeacherProfile", b =>
+                {
+                    b.Navigation("Carreras");
+                });
+
+            modelBuilder.Entity("EduMonitor.Usuarios.Models.User", b =>
+                {
+                    b.Navigation("Profile");
                 });
 #pragma warning restore 612, 618
         }

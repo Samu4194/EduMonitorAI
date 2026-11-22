@@ -2,10 +2,12 @@
 IF DB_ID('EduMonitor_Usuarios') IS NULL CREATE DATABASE EduMonitor_Usuarios;
 IF DB_ID('EduMonitor_Materias') IS NULL CREATE DATABASE EduMonitor_Materias;
 IF DB_ID('EduMonitor_Estudiantes') IS NULL CREATE DATABASE EduMonitor_Estudiantes;
+IF DB_ID('EduMonitor_Evaluaciones') IS NULL CREATE DATABASE EduMonitor_Evaluaciones;
 GO
 IF NOT EXISTS(SELECT 1 FROM sys.server_principals WHERE name='edumonitor_usuarios') CREATE LOGIN edumonitor_usuarios WITH PASSWORD=N'$(USUARIOS_PASSWORD)', CHECK_POLICY=ON;
 IF NOT EXISTS(SELECT 1 FROM sys.server_principals WHERE name='edumonitor_materias') CREATE LOGIN edumonitor_materias WITH PASSWORD=N'$(MATERIAS_PASSWORD)', CHECK_POLICY=ON;
 IF NOT EXISTS(SELECT 1 FROM sys.server_principals WHERE name='edumonitor_estudiantes') CREATE LOGIN edumonitor_estudiantes WITH PASSWORD=N'$(ESTUDIANTES_PASSWORD)', CHECK_POLICY=ON;
+IF NOT EXISTS(SELECT 1 FROM sys.server_principals WHERE name='edumonitor_evaluaciones') CREATE LOGIN edumonitor_evaluaciones WITH PASSWORD=N'$(EVALUACIONES_PASSWORD)', CHECK_POLICY=ON;
 GO
 USE EduMonitor_Usuarios;
 IF USER_ID('edumonitor_usuarios') IS NULL CREATE USER edumonitor_usuarios FOR LOGIN edumonitor_usuarios;
@@ -18,4 +20,8 @@ GO
 USE EduMonitor_Estudiantes;
 IF USER_ID('edumonitor_estudiantes') IS NULL CREATE USER edumonitor_estudiantes FOR LOGIN edumonitor_estudiantes;
 ALTER ROLE db_owner ADD MEMBER edumonitor_estudiantes;
+GO
+USE EduMonitor_Evaluaciones;
+IF USER_ID('edumonitor_evaluaciones') IS NULL CREATE USER edumonitor_evaluaciones FOR LOGIN edumonitor_evaluaciones;
+ALTER ROLE db_owner ADD MEMBER edumonitor_evaluaciones;
 GO

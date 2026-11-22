@@ -16,6 +16,7 @@ x-environment: &environment
   Database__Initialize: "true"
   Services__Usuarios: http://usuarios:8080
   Services__Materias: http://materias:8080
+  Services__Estudiantes: http://estudiantes:8080
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -41,6 +42,7 @@ services:
       USUARIOS_PASSWORD: ${USUARIOS_PASSWORD}
       MATERIAS_PASSWORD: ${MATERIAS_PASSWORD}
       ESTUDIANTES_PASSWORD: ${ESTUDIANTES_PASSWORD}
+      EVALUACIONES_PASSWORD: ${EVALUACIONES_PASSWORD}
     volumes: ["./database/initialize.sql:/init/initialize.sql:ro"]
     depends_on:
       sqlserver: {condition: service_healthy}
@@ -64,6 +66,15 @@ services:
     environment:
       <<: *environment
       ConnectionStrings__Default: "Server=sqlserver;Database=EduMonitor_Estudiantes;User Id=edumonitor_estudiantes;Password=${ESTUDIANTES_PASSWORD};Encrypt=True;TrustServerCertificate=True;Connect Timeout=3"
+  evaluaciones:
+    <<: *api
+    build: {context: ., dockerfile: services/evaluaciones/Dockerfile}
+    environment:
+      <<: *environment
+      ConnectionStrings__Default: "Server=sqlserver;Database=EduMonitor_Evaluaciones;User Id=edumonitor_evaluaciones;Password=${EVALUACIONES_PASSWORD};Encrypt=True;TrustServerCertificate=True;Connect Timeout=3"
+      Archivos__Ruta: /data/archivos
+    volumes:
+      - edumonitor_archivos:/data/archivos
   gateway:
     restart: unless-stopped
     build: {context: ., dockerfile: gateway/Dockerfile}
@@ -71,6 +82,7 @@ services:
       usuarios: {condition: service_started}
       materias: {condition: service_started}
       estudiantes: {condition: service_started}
+      evaluaciones: {condition: service_started}
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8080/health/ready"]
       interval: 5s
@@ -88,4 +100,5 @@ services:
       timeout: 3s
       retries: 12
 volumes:
+  edumonitor_archivos:
   edumonitor_sql:

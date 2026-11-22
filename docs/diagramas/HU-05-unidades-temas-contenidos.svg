@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1560" height="1967" viewBox="0 0 1560 1967" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <defs><marker id="flecha" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 1 L9 5 L0 9 Z" fill="#fff"/></marker></defs>
+  <rect width="100%" height="100%" fill="#1d1f23"/>
+  <text x="46" y="52" fill="#ffffff" font-size="24" font-weight="700">HU-05 · Gestión de unidades, temas y contenidos mínimos</text>
+  <text x="1514" y="52" fill="#8a929d" font-size="14" text-anchor="end">EduMonitor AI · Sprint 2 · Diagrama de secuencia</text>
+  <line x1="135" y1="156" x2="135" y2="1873" stroke="#d9dde3" stroke-width="1.4" opacity="0.85"/><line x1="457.5" y1="156" x2="457.5" y2="1873" stroke="#d9dde3" stroke-width="1.4" opacity="0.85"/><line x1="780" y1="156" x2="780" y2="1873" stroke="#d9dde3" stroke-width="1.4" opacity="0.85"/><line x1="1102.5" y1="156" x2="1102.5" y2="1873" stroke="#d9dde3" stroke-width="1.4" opacity="0.85"/><line x1="1425" y1="156" x2="1425" y2="1873" stroke="#d9dde3" stroke-width="1.4" opacity="0.85"/>
+  <g>
+    <rect x="30" y="92" width="210" height="64" rx="10" fill="#11151b" stroke="#8be04e" stroke-width="2"/>
+    <circle cx="66" cy="118" r="6" stroke="#8be04e" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M55 137 Q55 126 66 126 Q77 126 77 137 Z" stroke="#8be04e" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="96" y="129" fill="#8be04e" font-size="17" font-weight="600">Docente</text>
+  </g><g>
+    <rect x="352.5" y="92" width="210" height="64" rx="10" fill="#11151b" stroke="#b27cff" stroke-width="2"/>
+    <rect x="376.5" y="114" width="24" height="16" rx="2" stroke="#b27cff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M372.5 136 H404.5" stroke="#b27cff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="418.5" y="129" fill="#b27cff" font-size="17" font-weight="600">App Web</text>
+  </g><g>
+    <rect x="675" y="92" width="210" height="64" rx="10" fill="#11151b" stroke="#ffb020" stroke-width="2"/>
+    <circle cx="711" cy="124" r="9" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="711" cy="124" r="3.5" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="720" y1="124" x2="725" y2="124" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="717.363961030679" y1="130.36396103067892" x2="720.8994949366116" y2="133.89949493661166" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="711" y1="133" x2="711" y2="138" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="704.636038969321" y1="130.36396103067892" x2="701.1005050633884" y2="133.89949493661166" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="702" y1="124" x2="697" y2="124" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="704.636038969321" y1="117.63603896932108" x2="701.1005050633884" y2="114.10050506338834" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="711" y1="115" x2="711" y2="110" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="717.363961030679" y1="117.63603896932108" x2="720.8994949366116" y2="114.10050506338834" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="741" y="129" fill="#ffb020" font-size="17" font-weight="600">API Evaluaciones</text>
+  </g><g>
+    <rect x="997.5" y="92" width="210" height="64" rx="10" fill="#11151b" stroke="#2dd4bf" stroke-width="2"/>
+    <path d="M1019.5 115 H1031.5 Q1033.5 115 1033.5 117 V135 Q1033.5 133 1031.5 133 H1019.5 Z M1047.5 115 H1035.5 Q1033.5 115 1033.5 117 V135 Q1033.5 133 1035.5 133 H1047.5 Z" stroke="#2dd4bf" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="1063.5" y="120.5" fill="#2dd4bf" font-size="17" font-weight="600">API Materias y</text><text x="1063.5" y="137.5" fill="#2dd4bf" font-size="17" font-weight="600">Estudiantes</text>
+  </g><g>
+    <rect x="1320" y="92" width="210" height="64" rx="10" fill="#11151b" stroke="#4cc3ff" stroke-width="2"/>
+    <ellipse cx="1356" cy="115" rx="11" ry="4.5" stroke="#4cc3ff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M1345 115 V133 Q1345 138 1356 138 Q1367 138 1367 133 V115" stroke="#4cc3ff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M1345 124 Q1345 128.5 1356 128.5 Q1367 128.5 1367 124" stroke="#4cc3ff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="1386" y="129" fill="#4cc3ff" font-size="17" font-weight="600">Base de Datos</text>
+  </g>
+  <rect x="46" y="184" width="1468" height="38" rx="3" fill="#123022" stroke="#2f7a52" stroke-width="1.5"/>
+      <text x="780" y="209" fill="#8be04e" font-size="17" font-weight="700" text-anchor="middle">FASE 1: Acceso al contenido del curso</text>
+<line x1="135" y1="278" x2="453.5" y2="278" stroke="#fff" stroke-width="1.6"  marker-end="url(#flecha)"/>
+<text x="296.25" y="251" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Abre «Mis cursos» y entra</text><text x="296.25" y="268" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">a uno de sus cursos</text>
+<line x1="457.5" y1="352" x2="776" y2="352" stroke="#fff" stroke-width="1.6"  marker-end="url(#flecha)"/>
+<text x="618.75" y="325" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Solicita las unidades del curso</text><text x="618.75" y="342" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">(con el token del docente)</text>
+<line x1="780" y1="426" x2="1098.5" y2="426" stroke="#fff" stroke-width="1.6"  marker-end="url(#flecha)"/>
+<text x="941.25" y="399" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Verifica que el curso</text><text x="941.25" y="416" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">pertenece al docente</text>
+<line x1="1102.5" y1="500" x2="784" y2="500" stroke="#fff" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#flecha)"/>
+<text x="941.25" y="473" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Confirma el curso y el estado</text><text x="941.25" y="490" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">del período (404 si es ajeno)</text>
+<line x1="780" y1="574" x2="1421" y2="574" stroke="#fff" stroke-width="1.6"  marker-end="url(#flecha)"/>
+<text x="1102.5" y="547" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Consulta unidades, temas,</text><text x="1102.5" y="564" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">contenidos y archivos</text>
+<line x1="1425" y1="631" x2="784" y2="631" stroke="#fff" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#flecha)"/>
+<text x="1102.5" y="621" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Devuelve el contenido del curso</text>
+<line x1="780" y1="705" x2="461.5" y2="705" stroke="#fff" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#flecha)"/>
+<text x="618.75" y="678" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Responde las unidades</text><text x="618.75" y="695" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">con sus temas</text>
+<line x1="457.5" y1="762" x2="139" y2="762" stroke="#fff" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#flecha)"/>
+<text x="296.25" y="752" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Muestra la pestaña Contenido</text>
+<rect x="46" y="808" width="1468" height="38" rx="3" fill="#123022" stroke="#2f7a52" stroke-width="1.5"/>
+      <text x="780" y="833" fill="#8be04e" font-size="17" font-weight="700" text-anchor="middle">FASE 2: Registro de unidades, temas y contenidos mínimos</text>
+<line x1="135" y1="902" x2="453.5" y2="902" stroke="#fff" stroke-width="1.6"  marker-end="url(#flecha)"/>
+<text x="296.25" y="875" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Completa el formulario de</text><text x="296.25" y="892" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">unidad, tema o contenido mínimo</text>
+<line x1="457.5" y1="976" x2="776" y2="976" stroke="#fff" stroke-width="1.6"  marker-end="url(#flecha)"/>
+<text x="618.75" y="949" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Envía los datos</text><text x="618.75" y="966" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">(crear, editar o eliminar)</text>
+<path d="M780 1038 h26 a10 10 0 0 1 0 22 h-26" fill="none" stroke="#fff" stroke-width="1.6" marker-end="url(#flecha)"/>
+<text x="832" y="1044" fill="#f2f2f2" font-size="14" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Valida longitud, orden y que el</text><text x="832" y="1061" fill="#f2f2f2" font-size="14" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">período no esté finalizado</text>
+<line x1="780" y1="1130" x2="1421" y2="1130" stroke="#fff" stroke-width="1.6"  marker-end="url(#flecha)"/>
+<text x="1102.5" y="1103" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Guarda el registro y</text><text x="1102.5" y="1120" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">su orden en el curso</text>
+<line x1="1425" y1="1187" x2="784" y2="1187" stroke="#fff" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#flecha)"/>
+<text x="1102.5" y="1177" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Confirma el guardado</text>
+<line x1="780" y1="1261" x2="461.5" y2="1261" stroke="#fff" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#flecha)"/>
+<text x="618.75" y="1234" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Devuelve el elemento</text><text x="618.75" y="1251" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">creado o actualizado</text>
+<line x1="457.5" y1="1335" x2="139" y2="1335" stroke="#fff" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#flecha)"/>
+<text x="296.25" y="1308" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Muestra el aviso y actualiza</text><text x="296.25" y="1325" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">la lista de unidades</text>
+<rect x="46" y="1381" width="1468" height="38" rx="3" fill="#123022" stroke="#2f7a52" stroke-width="1.5"/>
+      <text x="780" y="1406" fill="#8be04e" font-size="17" font-weight="700" text-anchor="middle">FASE 3: Material de apoyo por tema</text>
+<line x1="135" y1="1475" x2="453.5" y2="1475" stroke="#fff" stroke-width="1.6"  marker-end="url(#flecha)"/>
+<text x="296.25" y="1448" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Sube un archivo ligero</text><text x="296.25" y="1465" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">(hasta 5 MB) a un tema</text>
+<line x1="457.5" y1="1532" x2="776" y2="1532" stroke="#fff" stroke-width="1.6"  marker-end="url(#flecha)"/>
+<text x="618.75" y="1522" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Envía el archivo al tema</text>
+<path d="M780 1594 h26 a10 10 0 0 1 0 22 h-26" fill="none" stroke="#fff" stroke-width="1.6" marker-end="url(#flecha)"/>
+<text x="832" y="1600" fill="#f2f2f2" font-size="14" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Valida tipo, tamaño, nombre único</text><text x="832" y="1617" fill="#f2f2f2" font-size="14" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">y máximo de 10 archivos por tema</text>
+<line x1="780" y1="1686" x2="1421" y2="1686" stroke="#fff" stroke-width="1.6"  marker-end="url(#flecha)"/>
+<text x="1102.5" y="1659" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Registra nombre, tipo y tamaño</text><text x="1102.5" y="1676" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">(el contenido se guarda en disco)</text>
+<line x1="780" y1="1743" x2="461.5" y2="1743" stroke="#fff" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#flecha)"/>
+<text x="618.75" y="1733" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Confirma la carga</text>
+<line x1="457.5" y1="1817" x2="139" y2="1817" stroke="#fff" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#flecha)"/>
+<text x="296.25" y="1790" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">Lista el material del tema con</text><text x="296.25" y="1807" fill="#f2f2f2" font-size="14" text-anchor="middle" stroke="#1d1f23" stroke-width="5" stroke-linejoin="round" paint-order="stroke">descarga y eliminación</text>
+  <circle cx="135" cy="278" r="14" fill="#8be04e"/><text x="135" y="283" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">1</text>
+<circle cx="457.5" cy="352" r="14" fill="#b27cff"/><text x="457.5" y="357" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">2</text>
+<circle cx="780" cy="426" r="14" fill="#ffb020"/><text x="780" y="431" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">3</text>
+<circle cx="1102.5" cy="500" r="14" fill="#2dd4bf"/><text x="1102.5" y="505" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">4</text>
+<circle cx="780" cy="574" r="14" fill="#ffb020"/><text x="780" y="579" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">5</text>
+<circle cx="1425" cy="631" r="14" fill="#4cc3ff"/><text x="1425" y="636" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">6</text>
+<circle cx="780" cy="705" r="14" fill="#ffb020"/><text x="780" y="710" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">7</text>
+<circle cx="457.5" cy="762" r="14" fill="#b27cff"/><text x="457.5" y="767" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">8</text>
+<circle cx="135" cy="902" r="14" fill="#8be04e"/><text x="135" y="907" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">9</text>
+<circle cx="457.5" cy="976" r="14" fill="#b27cff"/><text x="457.5" y="981" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">10</text>
+<circle cx="780" cy="1049" r="14" fill="#ffb020"/><text x="780" y="1054" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">11</text>
+<circle cx="780" cy="1130" r="14" fill="#ffb020"/><text x="780" y="1135" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">12</text>
+<circle cx="1425" cy="1187" r="14" fill="#4cc3ff"/><text x="1425" y="1192" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">13</text>
+<circle cx="780" cy="1261" r="14" fill="#ffb020"/><text x="780" y="1266" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">14</text>
+<circle cx="457.5" cy="1335" r="14" fill="#b27cff"/><text x="457.5" y="1340" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">15</text>
+<circle cx="135" cy="1475" r="14" fill="#8be04e"/><text x="135" y="1480" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">16</text>
+<circle cx="457.5" cy="1532" r="14" fill="#b27cff"/><text x="457.5" y="1537" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">17</text>
+<circle cx="780" cy="1605" r="14" fill="#ffb020"/><text x="780" y="1610" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">18</text>
+<circle cx="780" cy="1686" r="14" fill="#ffb020"/><text x="780" y="1691" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">19</text>
+<circle cx="780" cy="1743" r="14" fill="#ffb020"/><text x="780" y="1748" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">20</text>
+<circle cx="457.5" cy="1817" r="14" fill="#b27cff"/><text x="457.5" y="1822" fill="#0b0f14" font-size="14" font-weight="800" text-anchor="middle">21</text>
+  <g>
+    <rect x="30" y="1873" width="210" height="64" rx="10" fill="#11151b" stroke="#8be04e" stroke-width="2"/>
+    <circle cx="66" cy="1899" r="6" stroke="#8be04e" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M55 1918 Q55 1907 66 1907 Q77 1907 77 1918 Z" stroke="#8be04e" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="96" y="1910" fill="#8be04e" font-size="17" font-weight="600">Docente</text>
+  </g><g>
+    <rect x="352.5" y="1873" width="210" height="64" rx="10" fill="#11151b" stroke="#b27cff" stroke-width="2"/>
+    <rect x="376.5" y="1895" width="24" height="16" rx="2" stroke="#b27cff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M372.5 1917 H404.5" stroke="#b27cff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="418.5" y="1910" fill="#b27cff" font-size="17" font-weight="600">App Web</text>
+  </g><g>
+    <rect x="675" y="1873" width="210" height="64" rx="10" fill="#11151b" stroke="#ffb020" stroke-width="2"/>
+    <circle cx="711" cy="1905" r="9" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="711" cy="1905" r="3.5" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="720" y1="1905" x2="725" y2="1905" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="717.363961030679" y1="1911.3639610306789" x2="720.8994949366116" y2="1914.8994949366117" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="711" y1="1914" x2="711" y2="1919" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="704.636038969321" y1="1911.3639610306789" x2="701.1005050633884" y2="1914.8994949366117" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="702" y1="1905" x2="697" y2="1905" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="704.636038969321" y1="1898.6360389693211" x2="701.1005050633884" y2="1895.1005050633883" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="711" y1="1896" x2="711" y2="1891" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="717.363961030679" y1="1898.6360389693211" x2="720.8994949366116" y2="1895.1005050633883" stroke="#ffb020" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="741" y="1910" fill="#ffb020" font-size="17" font-weight="600">API Evaluaciones</text>
+  </g><g>
+    <rect x="997.5" y="1873" width="210" height="64" rx="10" fill="#11151b" stroke="#2dd4bf" stroke-width="2"/>
+    <path d="M1019.5 1896 H1031.5 Q1033.5 1896 1033.5 1898 V1916 Q1033.5 1914 1031.5 1914 H1019.5 Z M1047.5 1896 H1035.5 Q1033.5 1896 1033.5 1898 V1916 Q1033.5 1914 1035.5 1914 H1047.5 Z" stroke="#2dd4bf" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="1063.5" y="1901.5" fill="#2dd4bf" font-size="17" font-weight="600">API Materias y</text><text x="1063.5" y="1918.5" fill="#2dd4bf" font-size="17" font-weight="600">Estudiantes</text>
+  </g><g>
+    <rect x="1320" y="1873" width="210" height="64" rx="10" fill="#11151b" stroke="#4cc3ff" stroke-width="2"/>
+    <ellipse cx="1356" cy="1896" rx="11" ry="4.5" stroke="#4cc3ff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M1345 1896 V1914 Q1345 1919 1356 1919 Q1367 1919 1367 1914 V1896" stroke="#4cc3ff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M1345 1905 Q1345 1909.5 1356 1909.5 Q1367 1909.5 1367 1905" stroke="#4cc3ff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="1386" y="1910" fill="#4cc3ff" font-size="17" font-weight="600">Base de Datos</text>
+  </g>
+</svg>
