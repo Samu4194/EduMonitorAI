@@ -6,7 +6,7 @@ namespace EduMonitor.Evaluaciones.Controllers;
 
 // Consultar lo puede hacer el administrador o el docente del curso. Escribir, solo el docente del curso.
 // Materias valida el curso con el JWT reenviado: un curso ajeno responde 404.
-[ApiController, Authorize, Route("api/unidades")]
+[ApiController, EdicionAcademicaManual, Authorize, Route("api/unidades")]
 public class UnidadesController(ContenidosService service) : ControllerBase
 {
     [HttpGet] public async Task<IActionResult> List([FromQuery, System.ComponentModel.DataAnnotations.Range(1, int.MaxValue)] int cursoId, CancellationToken ct) => Ok(await service.Unidades(cursoId, ct));
@@ -30,8 +30,11 @@ public class UnidadesController(ContenidosService service) : ControllerBase
 [ApiController, Authorize(Roles = "Teacher"), Route("api/temas")]
 public class TemasController(ContenidosService service) : ControllerBase
 {
+    [EdicionAcademicaManual]
     [HttpPut("{id:int}")] public async Task<IActionResult> Update(int id, TemaEdit input, CancellationToken ct) => Ok(await service.EditarTema(id, input, ct));
+    [EdicionAcademicaManual]
     [HttpDelete("{id:int}")] public async Task<IActionResult> Delete(int id, CancellationToken ct) { await service.EliminarTema(id, ct); return NoContent(); }
+    [EdicionAcademicaManual]
     [HttpPost("{id:int}/mover")] public async Task<IActionResult> Move(int id, MoverRequest input, CancellationToken ct) { await service.MoverTema(id, input.Direccion, ct); return NoContent(); }
     // Material de apoyo del tema: archivos ligeros (hasta 5 MB). La descarga exige ser el docente del curso.
     [HttpPost("{id:int}/archivos"), RequestSizeLimit(6_000_000)]
@@ -49,6 +52,7 @@ public class TemasController(ContenidosService service) : ControllerBase
         return File(contenido, tipo, nombre);
     }
     [HttpDelete("archivos/{archivoId:int}")] public async Task<IActionResult> DeleteFile(int archivoId, CancellationToken ct) { await service.EliminarArchivo(archivoId, ct); return NoContent(); }
+    [EdicionAcademicaManual]
     [HttpPost("{id:int}/contenidos")]
     public async Task<IActionResult> AddContenido(int id, ContenidoRequest input, CancellationToken ct)
     {
@@ -57,14 +61,14 @@ public class TemasController(ContenidosService service) : ControllerBase
     }
 }
 
-[ApiController, Authorize(Roles = "Teacher"), Route("api/contenidos")]
+[ApiController, EdicionAcademicaManual, Authorize(Roles = "Teacher"), Route("api/contenidos")]
 public class ContenidosController(ContenidosService service) : ControllerBase
 {
     [HttpPut("{id:int}")] public async Task<IActionResult> Update(int id, ContenidoRequest input, CancellationToken ct) => Ok(await service.EditarContenido(id, input, ct));
     [HttpDelete("{id:int}")] public async Task<IActionResult> Delete(int id, CancellationToken ct) { await service.EliminarContenido(id, ct); return NoContent(); }
 }
 
-[ApiController, Authorize, Route("api/actividades")]
+[ApiController, EdicionAcademicaManual, Authorize, Route("api/actividades")]
 public class ActividadesController(ContenidosService service) : ControllerBase
 {
     [HttpGet]

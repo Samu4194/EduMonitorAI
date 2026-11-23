@@ -224,7 +224,7 @@ public sealed class EstudiantesService(EstudiantesDb db, DependencyClient depend
         // Se reenvía el JWT del usuario: Materias responde 404 si el curso no es de ese docente.
         await dependencies.Get<CursoReference>("Materias", $"/api/cursos/{cursoId}", ct);
         return await db.Inscripciones.AsNoTracking().Where(i => i.CursoId == cursoId && i.Activo && i.Student.Activo)
-            .OrderBy(i => i.Student.Apellidos).ThenBy(i => i.Student.Nombres).Select(i => new ListaEstudiante(i.StudentId, i.Student.Apellidos, i.Student.Nombres, i.Student.Correo)).ToListAsync(ct);
+            .OrderBy(i => i.Student.Apellidos).ThenBy(i => i.Student.Nombres).Select(i => new ListaEstudiante(i.StudentId, i.Student.Apellidos, i.Student.Nombres, i.Student.Correo, i.Student.MoodleUsuarioId, i.Student.MoodleCodigo)).ToListAsync(ct);
     }
 }
 

@@ -165,6 +165,23 @@ namespace EduMonitor.Evaluaciones.Migrations
                     b.ToTable("Contenidos");
                 });
 
+            modelBuilder.Entity("EduMonitor.Evaluaciones.Models.CorrespondenciaMoodle", b =>
+                {
+                    b.Property<int>("CursoId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Clave")
+                        .HasMaxLength(180)
+                        .HasColumnType("nvarchar(180)");
+
+                    b.Property<int>("LocalId")
+                        .HasColumnType("int");
+
+                    b.HasKey("CursoId", "Clave");
+
+                    b.ToTable("CorrespondenciaMoodle");
+                });
+
             modelBuilder.Entity("EduMonitor.Evaluaciones.Models.Ponderacion", b =>
                 {
                     b.Property<int>("CursoId")
@@ -251,6 +268,30 @@ namespace EduMonitor.Evaluaciones.Migrations
                     b.ToTable("Unidades");
                 });
 
+            modelBuilder.Entity("EduMonitor.Evaluaciones.Models.VinculoMoodle", b =>
+                {
+                    b.Property<int>("CursoId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("MoodleId")
+                        .HasColumnType("int");
+
+                    b.HasKey("CursoId");
+
+                    b.HasIndex("Codigo")
+                        .IsUnique();
+
+                    b.HasIndex("MoodleId")
+                        .IsUnique();
+
+                    b.ToTable("VinculoMoodle");
+                });
+
             modelBuilder.Entity("EduMonitor.Evaluaciones.Models.ActividadTema", b =>
                 {
                     b.HasOne("EduMonitor.Evaluaciones.Models.Actividad", "Actividad")
@@ -298,6 +339,15 @@ namespace EduMonitor.Evaluaciones.Migrations
                         .WithMany("Contenidos")
                         .HasForeignKey("TemaId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("EduMonitor.Evaluaciones.Models.CorrespondenciaMoodle", b =>
+                {
+                    b.HasOne("EduMonitor.Evaluaciones.Models.VinculoMoodle", null)
+                        .WithMany()
+                        .HasForeignKey("CursoId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

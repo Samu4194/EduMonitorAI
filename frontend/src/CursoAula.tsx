@@ -5,6 +5,7 @@ import { useObject, useResource } from "./useResource";
 import { ErrorBox, Empty } from "./components";
 import { romano, fmt, soloLectura, sinGuardar, confirmarSalida } from "./AulaComun";
 import { ContenidoTab } from "./ContenidosPage";
+import { AvisoMoodle, SincronizarMoodle, useVinculoMoodle } from "./MoodleCurso";
 import { ActividadesTab } from "./ActividadesPage";
 import { CalificacionesTab } from "./CalificacionesPage";
 import { RendimientoTab } from "./RendimientoPage";
@@ -103,7 +104,10 @@ function Aula({ curso, volver }: { curso: Curso; volver: () => void }) {
     // Actividad con la que se abre el libro de calificaciones al pulsar «Calificar».
     [actividad, setActividad] = useState("");
   const resumen = useObject<Rendimiento>(`/rendimiento/curso/${curso.id}`);
-  const lectura = soloLectura(curso);
+  const finalizado = soloLectura(curso);
+  const vinculo = useVinculoMoodle(curso.id);
+  const lectura = finalizado || vinculo.data?.vinculado !== false;
+  const [revision, setRevision] = useState(0);
   const s = resumen.data?.resumen;
 
   // Antes de salir de Calificaciones con notas escritas sin guardar, se pregunta.
@@ -135,7 +139,10 @@ function Aula({ curso, volver }: { curso: Curso; volver: () => void }) {
           </p>
         </div>
       </div>
-      {lectura && (
+      <ErrorBox message={vinculo.error} retry={vinculo.reload} />
+      {vinculo.data?.urlCurso && <AvisoMoodle url={vinculo.data.urlCurso} />}
+      {!finalizado && vinculo.data?.vinculado && <SincronizarMoodle cursoId={curso.id} actualizado={() => { setRevision(v => v + 1); resumen.reload(); }} />}
+      {finalizado && (
         <div className="aviso" role="status">
           El período {curso.periodo} finalizó: el curso está en modo de consulta y ya no se pueden cambiar su contenido, sus actividades ni sus calificaciones.
         </div>
@@ -170,9 +177,9 @@ function Aula({ curso, volver }: { curso: Curso; volver: () => void }) {
           </button>
         ))}
       </div>
-      <div role="tabpanel" className="tab-panel">
+      <div key={revision} role="tabpanel" className="tab-panel">
         {pestana === "contenido" ? (
-          <ContenidoTab curso={curso} lectura={lectura} />
+          <ContenidoTab curso={curso} lectura={lectura} archivosEditables={!finalizado} />
         ) : pestana === "actividades" ? (
           <ActividadesTab
             curso={curso}

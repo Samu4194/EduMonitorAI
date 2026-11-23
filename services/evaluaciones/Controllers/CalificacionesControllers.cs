@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 namespace EduMonitor.Evaluaciones.Controllers;
 
-[ApiController, Authorize, Route("api/calificaciones")]
+[ApiController, EdicionAcademicaManual, Authorize, Route("api/calificaciones")]
 public class CalificacionesController(CalificacionesService service) : ControllerBase
 {
     // Estudiantes del paralelo del curso, sus notas por actividad y el resultado ponderado.
