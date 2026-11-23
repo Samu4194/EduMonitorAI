@@ -11,7 +11,7 @@ type Edicion =
   | { tipo: "contenido"; tema: Tema; contenido?: ContenidoMinimo };
 
 // Pestaña «Contenido» del curso: unidades, temas, contenidos mínimos y material de apoyo (HU-05).
-export function ContenidoTab({ curso, lectura }: { curso: Curso; lectura: boolean }) {
+export function ContenidoTab({ curso, lectura, archivosEditables }: { curso: Curso; lectura: boolean; archivosEditables: boolean }) {
   const unidades = useResource<Unidad>(`/unidades?cursoId=${curso.id}`);
   const [edicion, setEdicion] = useState<Edicion | null>(null),
     [notice, setNotice] = useState(""),
@@ -163,7 +163,7 @@ export function ContenidoTab({ curso, lectura }: { curso: Curso; lectura: boolea
                   ))}
                   {!t.contenidos.length && <li className="muted">Sin contenidos mínimos todavía.</li>}
                 </ul>
-                {(t.archivos.length > 0 || !lectura) && (
+                {(t.archivos.length > 0 || archivosEditables) && (
                   <div className="material">
                     <small className="muted">Material del tema</small>
                     {t.archivos.map((a) => (
@@ -176,7 +176,7 @@ export function ContenidoTab({ curso, lectura }: { curso: Curso; lectura: boolea
                         <button className="icon" title="Descargar" aria-label={`Descargar ${a.nombre}`} onClick={() => bajar(a)}>
                           <Download size={14} />
                         </button>
-                        {!lectura && (
+                        {archivosEditables && (
                           <button
                             className="icon peligro"
                             title="Eliminar archivo"
@@ -189,7 +189,7 @@ export function ContenidoTab({ curso, lectura }: { curso: Curso; lectura: boolea
                       </span>
                     ))}
                     {!t.archivos.length && <small className="muted">Sin archivos todavía.</small>}
-                    {!lectura && (
+                    {archivosEditables && (
                       <label className="subir">
                         <Upload size={14} /> Subir archivo
                         <input

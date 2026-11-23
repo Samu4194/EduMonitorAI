@@ -14,6 +14,7 @@ x-environment: &environment
   Services__Usuarios: http://usuarios:8080
   Services__Materias: http://materias:8080
   Services__Estudiantes: http://estudiantes:8080
+  Services__Evaluaciones: http://evaluaciones:8080
 services:
   usuarios:
     <<: *api
@@ -37,6 +38,9 @@ services:
       ConnectionStrings__Default: "Server=host.docker.internal,1433;Database=EduMonitor_Estudiantes;User Id=edumonitor_estudiantes;Password=${ESTUDIANTES_PASSWORD};Encrypt=True;TrustServerCertificate=True;Connect Timeout=3"
   evaluaciones:
     <<: *api
+    env_file:
+      - path: ./.local/moodle.env
+        required: false
     build: {context: ., dockerfile: services/evaluaciones/Dockerfile}
     environment:
       <<: *environment

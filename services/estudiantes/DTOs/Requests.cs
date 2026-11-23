@@ -23,7 +23,7 @@ public record StudentEdit(
 // venir en el archivo (también cuentan como actualizados). Inscripciones son los cursos agregados o reincorporados.
 public record PrecargaResultado(int Creados, int Actualizados, int Total, int Reactivados, int Inscripciones);
 // La lista que ve el docente no incluye la cédula: solo lo necesario para identificar al estudiante.
-public record ListaEstudiante(int Id, string Apellidos, string Nombres, string Correo);
+public record ListaEstudiante(int Id, string Apellidos, string Nombres, string Correo, int? MoodleUsuarioId, string? MoodleCodigo);
 public record InscripcionView(int Id, int CursoId, int Nivel, string Paralelo, string MateriaCodigo, string MateriaNombre, int Creditos, bool Activo);
 // Creditos = suma de las materias activas del estudiante (todas, aunque el listado venga filtrado), frente al máximo por período.
 public record StudentView(int Id, string Cedula, string Apellidos, string Nombres, string Correo, string CarreraCodigo, bool Activo, DateTime? BajaEn, int Creditos, int MaxCreditos, List<InscripcionView> Inscripciones);

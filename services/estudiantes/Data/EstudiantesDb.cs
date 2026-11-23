@@ -8,6 +8,9 @@ public class EstudiantesDb(DbContextOptions<EstudiantesDb> options) : DbContext(
     public DbSet<Inscripcion> Inscripciones => Set<Inscripcion>();
     protected override void OnModelCreating(ModelBuilder b)
     {
+        b.Entity<Student>().HasIndex(x => x.MoodleUsuarioId).IsUnique();
+        b.Entity<Student>().Property(x => x.MoodleCodigo).HasMaxLength(100);
+        b.Entity<Student>().HasIndex(x => x.MoodleCodigo).IsUnique();
         b.Entity<Student>().Property(x => x.Cedula).HasMaxLength(10);
         b.Entity<Student>().HasIndex(x => x.Cedula).IsUnique();
         b.Entity<Student>().Property(x => x.Apellidos).HasMaxLength(100);

@@ -112,6 +112,13 @@ namespace EduMonitor.Estudiantes.Migrations
                         .HasMaxLength(254)
                         .HasColumnType("nvarchar(254)");
 
+                    b.Property<string>("MoodleCodigo")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("MoodleUsuarioId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Nombres")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -123,6 +130,14 @@ namespace EduMonitor.Estudiantes.Migrations
 
                     b.HasIndex("Cedula")
                         .IsUnique();
+
+                    b.HasIndex("MoodleCodigo")
+                        .IsUnique()
+                        .HasFilter("[MoodleCodigo] IS NOT NULL");
+
+                    b.HasIndex("MoodleUsuarioId")
+                        .IsUnique()
+                        .HasFilter("[MoodleUsuarioId] IS NOT NULL");
 
                     b.ToTable("Students");
                 });

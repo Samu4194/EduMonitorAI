@@ -12,6 +12,8 @@ import {
 import { useResource } from "./useResource";
 import { Modal, ErrorBox, Empty } from "./components";
 
+import { VinculoMoodle } from "./MoodleCurso";
+
 const romano = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"];
 
 // Cursos del período para el administrador: paralelos y asignación de docentes. El docente usa «Mis cursos» (CursoAula).
@@ -23,6 +25,7 @@ export function CursosPage() {
     [notice, setNotice] = useState(""),
     [error, setError] = useState(""),
     [lista, setLista] = useState<Curso | null>(null),
+    [moodle, setMoodle] = useState<Curso | null>(null),
     [nuevo, setNuevo] = useState(false);
   const carreras = useResource<Carrera>("/carreras");
   const periodos = useResource<Periodo>("/periodos");
@@ -214,6 +217,7 @@ export function CursosPage() {
                         <button className="text-button" onClick={() => setLista(c)}>
                           Ver lista <ArrowUpRight size={15} />
                         </button>
+                        <button className="text-button" onClick={() => setMoodle(c)}>Vincular Moodle</button>
                       </td>
                     </tr>
                   ))}
@@ -236,6 +240,7 @@ export function CursosPage() {
           }}
         />
       )}
+      {moodle && <VinculoMoodle curso={moodle} close={() => setMoodle(null)} />}
       {lista && <Lista curso={lista} close={() => setLista(null)} />}
     </>
   );
