@@ -35,8 +35,35 @@ public sealed class ResumenMoodle
 }
 
 public sealed class SincronizacionMoodle(EvaluacionesDb db, AccesoCursos acceso, MoodleClient cliente,
-    ContenidosService contenidos, CalificacionesService calificaciones, IConfiguration configuracion)
+    ContenidosService contenidos, CalificacionesService calificaciones, IConfiguration configuracion, DependencyClient dependencias, IHttpContextAccessor http)
 {
+    private sealed record CorreoRef(string Email);
+
+    // Correo del docente que ve este curso en EduMonitor: si quien consulta es el docente, el suyo; si es el administrador, el del docente asignado.
+    private async Task<string?> CorreoAsignado(CursoReference curso, CancellationToken ct)
+    {
+        if (http.HttpContext?.User.IsInRole("Admin") == true)
+            return curso.TeacherId is int id ? (await dependencias.Get<CorreoRef>("Usuarios", $"/api/docentes/{id}", ct)).Email : null;
+        return (await dependencias.Get<CorreoRef>("Usuarios", "/api/auth/session", ct)).Email;
+    }
+
+    // El aviso es un extra: si Usuarios no responde, la sincronización sigue sin él.
+    private async Task<List<string>> AvisosDelDocente(int cursoId, AulaMoodle aula, CancellationToken ct)
+    {
+        try { return ComprobacionDocente.Evaluar(await CorreoAsignado(await acceso.Curso(cursoId, ct), ct), aula.Profesores).Avisos; }
+        catch (ApiException) { return []; }
+    }
+
+    // ¿Coincide quien califica en Moodle con el docente asignado aquí? Solo informa: no bloquea nada.
+    public async Task<object> Docentes(int cursoId, CancellationToken ct)
+    {
+        var curso = await acceso.Curso(cursoId, ct);
+        var aula = await Leer(cursoId, ct);
+        var correo = await CorreoAsignado(curso, ct);
+        var r = ComprobacionDocente.Evaluar(correo, aula.Profesores);
+        return new { asignado = correo, coincide = r.Coincide, profesores = (aula.Profesores ?? []).Select(p => new { nombre = $"{p.Nombres} {p.Apellidos}".Trim(), correo = p.Correo }), avisos = r.Avisos };
+    }
+
     public async Task<EstadoVinculoMoodle> Estado(int cursoId, CancellationToken ct)
     {
         await acceso.Curso(cursoId, ct);
@@ -93,6 +120,7 @@ public sealed class SincronizacionMoodle(EvaluacionesDb db, AccesoCursos acceso,
 
         var resumen = new ResumenMoodle();
         resumen.Avisos.AddRange(aula.Avisos ?? []);
+        resumen.Avisos.AddRange(await AvisosDelDocente(cursoId, aula, ct));
         // Si el libro de Moodle tiene una categoría por tipo de actividad, esa es la ponderación del curso (Moodle manda).
         if (aula.Pesos is { } pm)
         {

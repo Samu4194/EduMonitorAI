@@ -39,7 +39,7 @@ public sealed record ReglasTipos(Regex Examen, Regex Ape)
 //  - Lo que Moodle no entrega o no cuadra no tumba todo el curso: la nota queda «no disponible» y se avisa. Solo se rechaza lo ambiguo
 //    (estudiantes con el mismo identificador, actividades con datos contradictorios, un curso sin matrícula o sin actividades calificadas).
 public record AulaMoodle(List<AlumnoMoodle> Alumnos, List<SeccionMoodle> Secciones, List<ActividadMoodle> Actividades,
-    Dictionary<(int Usuario, int Cm), decimal?> Notas, List<string>? Avisos = null, PesosMoodle? Pesos = null)
+    Dictionary<(int Usuario, int Cm), decimal?> Notas, List<string>? Avisos = null, PesosMoodle? Pesos = null, List<AlumnoMoodle>? Profesores = null)
 {
     private static void Exigir(bool ok, string mensaje)
     {
@@ -147,6 +147,15 @@ public record AulaMoodle(List<AlumnoMoodle> Alumnos, List<SeccionMoodle> Seccion
         }).ToList();
         Exigir(alumnos.Count > 0 && alumnos.DistinctBy(x => x.Id).Count() == alumnos.Count &&
             alumnos.DistinctBy(x => x.Codigo, StringComparer.OrdinalIgnoreCase).Count() == alumnos.Count, "Matrícula ausente o ambigua.");
+
+        // Profesores del curso (con o sin permiso de edición): sirven para comprobar que quien califica en Moodle es el docente asignado en EduMonitor.
+        var profesores = usuarios.EnumerateArray().Where(u => u.TryGetProperty("roles", out var roles) && roles.ValueKind == JsonValueKind.Array &&
+            roles.EnumerateArray().Any(r => Texto(r, "shortname") is "editingteacher" or "teacher")).Select(u =>
+        {
+            var id = Entero(u, "id");
+            return new AlumnoMoodle(id, Recortar(Texto(u, "idnumber") ?? Texto(u, "username") ?? $"U{id}", 100), Recortar(Texto(u, "firstname") ?? "", 100),
+                Recortar(Texto(u, "lastname") ?? "", 100), Recortar(Texto(u, "email") ?? "", 254));
+        }).ToList();
 
         // Secciones y módulos del curso
         var seccionesTodas = new List<(int Id, int Numero, string Nombre, string Resumen)>();
@@ -262,7 +271,7 @@ public record AulaMoodle(List<AlumnoMoodle> Alumnos, List<SeccionMoodle> Seccion
             if (local is { } l && Math.Abs(l - deMoodle) > 0.05m)
                 Avisar($"El total de Moodle de {alumno.Codigo} ({deMoodle:0.00}) difiere del que calcula EduMonitor ({l:0.00}): revisa la ponderación del curso.");
         }
-        return new(alumnos, secciones, actividades.Values.ToList(), notas, avisos, pesos);
+        return new(alumnos, secciones, actividades.Values.ToList(), notas, avisos, pesos, profesores);
     }
 
     // Peso por tipo (en %) si cada categoría del libro agrupa actividades de un solo tipo y están los tres tipos.

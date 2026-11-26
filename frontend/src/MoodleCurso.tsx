@@ -112,6 +112,10 @@ export function VinculoMoodle({ curso, close }: { curso: Curso; close: () => voi
   const [resultado, setResultado] = useState<Resumen | null>(null);
   const ruta = `/estudiantes/moodle/${curso.id}`;
   const vinculo = useVinculoMoodle(curso.id);
+  // ¿Quien califica en Moodle es el docente asignado en EduMonitor? Solo informa.
+  const docentes = useObject<{ asignado: string | null; coincide: boolean; profesores: { nombre: string; correo: string }[]; avisos: string[] }>(
+    vinculo.data?.vinculado ? `/moodle/cursos/${curso.id}/docentes` : null,
+  );
   async function ejecutar(accion: () => Promise<void>) {
     setBusy(true);
     setError("");
@@ -127,6 +131,9 @@ export function VinculoMoodle({ curso, close }: { curso: Curso; close: () => voi
     {vinculo.data?.urlCurso && <p className="aviso" role="status">Este curso ya está vinculado con Moodle. {" "}
       <a href={vinculo.data.urlCurso} target="_blank" rel="noreferrer">Abrir curso en Moodle</a></p>}
     <ErrorBox message={vinculo.error} retry={vinculo.reload} />
+    {docentes.data && (docentes.data.coincide
+      ? <p className="muted small" role="status">✓ El docente asignado ({docentes.data.asignado}) es profesor de este curso en Moodle.</p>
+      : docentes.data.avisos.map((t) => <p key={t} className="aviso" role="status">{t}</p>))}
     <form onSubmit={e => { e.preventDefault(); void ejecutar(async () => {
       setFichas([]);
       await api(`/moodle/cursos/${curso.id}/vinculo`, "PUT", { codigo: codigo.trim() });
