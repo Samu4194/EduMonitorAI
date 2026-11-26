@@ -1,10 +1,10 @@
 param([switch]$NoBrowser)
 # Levanta EduMonitor con SQL Server instalado en Windows (compose.express.yaml).
-# Comprueba Docker y SQL Server, crea las bases si faltan y arranca los cinco contenedores.
+# Comprueba Docker y SQL Server, crea las bases si faltan y arranca los seis contenedores.
 . "$PSScriptRoot/Common.ps1"
 $compose = 'compose.express.yaml'
 $sqlService = 'MSSQLSERVER'
-$databases = 'EduMonitor_Usuarios', 'EduMonitor_Materias', 'EduMonitor_Estudiantes', 'EduMonitor_Evaluaciones'
+$databases = 'EduMonitor_Usuarios', 'EduMonitor_Materias', 'EduMonitor_Estudiantes', 'EduMonitor_Evaluaciones', 'EduMonitor_Seguimiento'
 
 function Step([string]$text) { Write-Host "==> $text" -ForegroundColor Cyan }
 
@@ -51,7 +51,7 @@ if ($sqlcmd) {
         Step 'Creando bases y logins de EduMonitor'
         $initFile = Join-Path $LocalDir 'initialize-express.sql'
         $sql = Get-Content (Join-Path $ProjectRoot 'database/initialize.sql') -Raw
-        $sql = $sql.Replace('$(USUARIOS_PASSWORD)', $Settings.UsuariosPassword).Replace('$(MATERIAS_PASSWORD)', $Settings.MateriasPassword).Replace('$(ESTUDIANTES_PASSWORD)', $Settings.EstudiantesPassword).Replace('$(EVALUACIONES_PASSWORD)', $Settings.EvaluacionesPassword)
+        $sql = $sql.Replace('$(USUARIOS_PASSWORD)', $Settings.UsuariosPassword).Replace('$(MATERIAS_PASSWORD)', $Settings.MateriasPassword).Replace('$(ESTUDIANTES_PASSWORD)', $Settings.EstudiantesPassword).Replace('$(EVALUACIONES_PASSWORD)', $Settings.EvaluacionesPassword).Replace('$(SEGUIMIENTO_PASSWORD)', $Settings.SeguimientoPassword)
         $sql | Set-Content -LiteralPath $initFile -Encoding UTF8
         sqlcmd -S . -E -C -b -i $initFile | Out-Null
         Assert-Exit 'Creacion de las bases de datos'
