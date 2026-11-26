@@ -35,6 +35,9 @@ assign_capability('webservice/rest:use', CAP_ALLOW, $role, $sys->id);
 role_assign($role,$user->id,$sys->id);
 foreach (['moodle/course:view','moodle/course:viewparticipants','moodle/user:viewdetails','moodle/site:viewuseridentity',
     'moodle/user:viewalldetails','moodle/grade:viewall','gradereport/user:view','mod/assign:view','mod/quiz:view'] as $cap) {
+    // En todo el sitio (el rol ya está asignado a la cuenta en el contexto del sitio): así la cuenta puede leer también los cursos que se creen después.
+    // Todas son capacidades de SOLO LECTURA. Además se mantienen en el curso de Física.
+    assign_capability($cap, CAP_ALLOW, $role, $sys->id);
     assign_capability($cap, CAP_ALLOW, $role, $ctx->id);
 }
 $manual = array_values(array_filter(enrol_get_instances($course->id,true),fn($i)=>$i->enrol==='manual'))[0];

@@ -15,6 +15,7 @@ Crea el paralelo A de Software, nivel I, y un docente de demostración asignado 
 
 Entra a http://localhost:8085 como administrador (las claves están en `.secrets/accesos-moodle.json` de la carpeta de Moodle).
 
+0. Si usas el aula de Física que trae el ZIP de Moodle, **desmatricula antes a sus 5 estudiantes de ejemplo** (`SOF-EST-001` a `005`, en Participantes): no tienen cédula y EduMonitor la pediría para los 25.
 1. **Administración del sitio → Usuarios → Cuentas → Subir usuarios** y sube `estudiantes-moodle.csv` con separador **coma** y UTF-8.
    Crea 20 estudiantes y los matricula como *estudiante* en el curso `SOF-101-2026AD-A` (si el nombre corto de tu curso es otro,
    cámbialo en la columna `course1`).

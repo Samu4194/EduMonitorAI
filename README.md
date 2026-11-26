@@ -4,6 +4,8 @@ Plataforma académica local con React + TypeScript, cinco APIs independientes AS
 
 ## Inicio rápido en este equipo
 
+¿Vas a instalar todo en otra computadora (EduMonitor + Moodle + IA)? Sigue la guía completa: [docs/INSTALACION.md](docs/INSTALACION.md).
+
 1. Abre Docker Desktop y espera a que el motor esté listo.
 2. Ejecuta **Iniciar EduMonitor.cmd** dentro de esta carpeta.
 3. Espera el mensaje **EduMonitor está listo**. La primera construcción puede tardar varios minutos.
