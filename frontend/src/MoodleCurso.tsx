@@ -6,7 +6,7 @@ import { confirmarSalida } from "./AulaComun";
 import { useObject } from "./useResource";
 
 export function useVinculoMoodle(cursoId: number) {
-  return useObject<{ vinculado: boolean; urlCurso: string | null }>(`/moodle/cursos/${cursoId}/vinculo`);
+  return useObject<{ vinculado: boolean; urlCurso: string | null; codigo: string | null }>(`/moodle/cursos/${cursoId}/vinculo`);
 }
 
 export type FuenteAcademica = { fuente: "Moodle" | "Manual"; moodleConfigurado: boolean };
@@ -92,19 +92,7 @@ function Resultado({ valor }: { valor: Resumen | null }) {
   </div>;
 }
 
-// Identificador estándar del curso en Moodle (su «Número de ID»): materia + año y meses del período + paralelo.
-// Ejemplo: Física A de «Agosto - Diciembre 2026» → SOF-101-2026AD-A. Es único porque cada curso es una combinación única de esas tres cosas.
-export function codigoMoodle(curso: Curso): string {
-  const periodo = curso.periodo ?? "";
-  const anio = periodo.match(/\d{4}/)?.[0] ?? "";
-  const meses = (periodo.match(/[A-Za-zÁÉÍÓÚÑáéíóúñ]{3,}/g) ?? []).map((m) => m[0].toUpperCase()).join("").slice(0, 4);
-  return [curso.materiaCodigo, `${anio}${meses}`, curso.paralelo].filter(Boolean).join("-");
-}
-
 export function VinculoMoodle({ curso, close }: { curso: Curso; close: () => void }) {
-  const sugerido = codigoMoodle(curso);
-  const [codigo, setCodigo] = useState(sugerido);
-  const [otro, setOtro] = useState(false);
   const [copiado, setCopiado] = useState(false);
   const [fichas, setFichas] = useState<Ficha[]>([]);
   const [busy, setBusy] = useState(false);
@@ -112,6 +100,8 @@ export function VinculoMoodle({ curso, close }: { curso: Curso; close: () => voi
   const [resultado, setResultado] = useState<Resumen | null>(null);
   const ruta = `/estudiantes/moodle/${curso.id}`;
   const vinculo = useVinculoMoodle(curso.id);
+  // El identificador lo genera el servidor (único y fijo): aquí solo se muestra.
+  const codigo = vinculo.data?.codigo ?? curso.codigoMoodle ?? "";
   // ¿Quien califica en Moodle es el docente asignado en EduMonitor? Solo informa.
   const docentes = useObject<{ asignado: string | null; coincide: boolean; profesores: { nombre: string; correo: string }[]; avisos: string[] }>(
     vinculo.data?.vinculado ? `/moodle/cursos/${curso.id}/docentes` : null,
@@ -136,26 +126,21 @@ export function VinculoMoodle({ curso, close }: { curso: Curso; close: () => voi
       : docentes.data.avisos.map((t) => <p key={t} className="aviso" role="status">{t}</p>))}
     <form onSubmit={e => { e.preventDefault(); void ejecutar(async () => {
       setFichas([]);
-      await api(`/moodle/cursos/${curso.id}/vinculo`, "PUT", { codigo: codigo.trim() });
+      await api(`/moodle/cursos/${curso.id}/vinculo`, "PUT", {});
       vinculo.reload();
       setFichas(conSugerencias(await api<Ficha[]>(ruta)));
     }); }}>
       <label>Identificador del curso en Moodle
-        <input required maxLength={100} value={codigo} readOnly={!otro} aria-readonly={!otro}
-          onChange={e => { setCodigo(e.target.value); setFichas([]); setResultado(null); }} />
+        <input value={codigo} readOnly aria-readonly="true" />
       </label>
       <p className="muted small">
-        Lo genera el sistema y no se repite. Al crear el curso en Moodle, escríbelo en el campo
+        Lo genera el sistema, es único y no se puede cambiar. Al crear el curso en Moodle, escríbelo tal cual en el campo
         «Número de ID del curso» (ID number); así EduMonitor lo encuentra.
       </p>
       <div className="enlaces-fila">
         <button type="button" className="text-button" onClick={() => {
           void navigator.clipboard?.writeText(codigo).then(() => { setCopiado(true); setTimeout(() => setCopiado(false), 2500); }, () => undefined);
         }}>{copiado ? "Copiado" : "Copiar código"}</button>
-        <button type="button" className="text-button" onClick={() => {
-          if (otro) setCodigo(sugerido);
-          setOtro(!otro); setFichas([]); setResultado(null);
-        }}>{otro ? "Usar el código generado" : "Usar otro código (el curso ya existe en Moodle con otro ID)"}</button>
       </div>
       <div className="modal-actions">
         <button className="secondary" type="button" disabled={busy || !vinculo.data?.vinculado}
@@ -163,7 +148,7 @@ export function VinculoMoodle({ curso, close }: { curso: Curso; close: () => voi
           onClick={() => void ejecutar(async () => {
             setFichas([]); setFichas(conSugerencias(await api<Ficha[]>(ruta)));
           })}>Revisar matrícula de Moodle</button>
-        <button className="primary" disabled={busy}>Vincular curso</button>
+        <button className="primary" disabled={busy || !codigo}>Vincular curso</button>
       </div>
       <p className="muted small">«Revisar matrícula» sirve cuando ya está vinculado y se inscribieron estudiantes nuevos en Moodle: los lista para confirmar su cédula y crearlos en EduMonitor.</p>
     </form>

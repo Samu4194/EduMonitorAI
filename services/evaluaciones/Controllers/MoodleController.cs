@@ -5,7 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace EduMonitor.Evaluaciones.Controllers;
 
-public record VincularMoodle([Required, StringLength(100, MinimumLength = 1)] string Codigo);
+// El código lo genera el sistema; si se envía, debe coincidir (no se puede elegir otro).
+public record VincularMoodle([StringLength(100)] string? Codigo = null);
 
 [ApiController, Authorize, Route("api/moodle/cursos/{cursoId:int}")]
 public class MoodleController(SincronizacionMoodle service) : ControllerBase
@@ -15,7 +16,7 @@ public class MoodleController(SincronizacionMoodle service) : ControllerBase
 
     [HttpPut("vinculo"), Authorize(Roles = "Admin")]
     public async Task<IActionResult> Vincular(int cursoId, VincularMoodle input, CancellationToken ct) =>
-        Ok(await service.Vincular(cursoId, input.Codigo.Trim(), ct));
+        Ok(await service.Vincular(cursoId, input.Codigo, ct));
 
     [HttpGet("origen"), Authorize(Roles = "Admin")]
     public async Task<IActionResult> Origen(int cursoId, CancellationToken ct) =>

@@ -494,4 +494,29 @@ public sealed class SprintTests : IAsyncLifetime
         await Status(HttpStatusCode.NotFound, admin.PostAsync("/api/docentes/2147483647/baja", null));
         Assert.Contains(teacherId, (await admin.GetFromJsonAsync<JsonElement>("/api/docentes?estado=activos")).EnumerateArray().Select(x => x.GetProperty("id").GetInt32()));
     }
+
+    [Fact]
+    public async Task HU09_MoodleCourseIdentifiers_AreGeneratedByTheSystemAreUniqueAndCannotBeChosen()
+    {
+        var letra = await Paralelo();
+        var todos = (await admin.GetFromJsonAsync<JsonElement>("/api/cursos")).EnumerateArray().ToList();
+        var codigos = todos.Select(c => c.GetProperty("codigoMoodle").GetString()!).ToList();
+        // Todos los cursos tienen identificador y no hay dos iguales (Moodle exige un Número de ID único por curso)
+        Assert.All(codigos, c => Assert.False(string.IsNullOrWhiteSpace(c)));
+        Assert.Equal(codigos.Count, codigos.Distinct(StringComparer.OrdinalIgnoreCase).Count());
+        var curso = (await Cursos(letra))[0];
+        var id = curso.GetProperty("id").GetInt32();
+        var codigo = curso.GetProperty("codigoMoodle").GetString()!;
+        Assert.StartsWith(curso.GetProperty("materiaCodigo").GetString() + "-", codigo);
+        Assert.EndsWith("-" + letra, codigo);
+        // El estado del vínculo ofrece ese mismo identificador y nadie puede elegir otro
+        var estado = await admin.GetFromJsonAsync<JsonElement>($"/api/moodle/cursos/{id}/vinculo");
+        Assert.False(estado.GetProperty("vinculado").GetBoolean());
+        Assert.Equal(codigo, estado.GetProperty("codigo").GetString());
+        using var rechazo = await admin.PutAsJsonAsync($"/api/moodle/cursos/{id}/vinculo", new { codigo = "OTRO-IDENTIFICADOR" });
+        Assert.Equal(HttpStatusCode.BadRequest, rechazo.StatusCode);
+        var mensaje = await rechazo.Content.ReadAsStringAsync();
+        Assert.Contains("no se puede cambiar", mensaje);
+        Assert.Contains(codigo, mensaje);
+    }
 }

@@ -25,7 +25,7 @@ flowchart LR
     F --> G[Rendimiento · Alertas · Asistente]
 ```
 
-1. **Vincular.** El administrador relaciona el curso de EduMonitor con el de Moodle por su identificador (`idnumber`).
+1. **Vincular.** El administrador relaciona el curso de EduMonitor con el de Moodle por su identificador (`idnumber`). **Ese identificador lo genera el sistema y nadie lo elige ni lo cambia**: materia + año y meses del período + paralelo (por ejemplo `SOF-101-2026AD-A`). Es único: si dos cursos dieran el mismo, el segundo en crearse lleva un sufijo (`-2`) y el primero conserva el suyo, así un código ya entregado nunca cambia. En Moodle el curso se crea con ese valor en «Número de ID del curso»; la base además exige que un código, un curso de Moodle y un curso de EduMonitor se vinculen una sola vez. La API rechaza (400) cualquier otro valor.
 2. **Matrícula.** Los estudiantes se enlazan por su id estable de Moodle. Si ya existe un estudiante con el mismo **correo**, su cédula viene sugerida y solo se confirma.
 3. **Sincronizar.** El docente asignado pulsa el botón. Se hacen tres lecturas con una cuenta de servicio de permisos mínimos: contenido del curso, matrícula y libro de calificaciones. Todo ocurre en una transacción: si algo falla, no queda nada a medias. Moodle manda también al borrar: lo que ya no existe allá (actividades, temas o unidades) se retira de EduMonitor con sus notas y la sincronización lo avisa («retirados»). Como freno, si Moodle no devuelve nada de contenido se rechaza la sincronización y no se borra nada.
 

@@ -45,7 +45,7 @@ public record PonderacionRequest(
     [Range(0, 10, ErrorMessage = "La nota mínima debe estar entre 0 y 10.")] decimal NotaMinima);
 
 // ---- Respuestas de otros servicios ----
-public record CursoReference(int Id, string MateriaNombre, string Carrera, int Nivel, string Paralelo, int? TeacherId, string? Periodo = null, string? PeriodoEstado = null);
+public record CursoReference(int Id, string MateriaNombre, string Carrera, int Nivel, string Paralelo, int? TeacherId, string? Periodo = null, string? PeriodoEstado = null, string? CodigoMoodle = null);
 public record EstudianteReference(int Id, string Apellidos, string Nombres, string Correo, int? MoodleUsuarioId = null, string? MoodleCodigo = null);
 
 // ---- Salidas ----

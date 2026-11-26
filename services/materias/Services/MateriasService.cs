@@ -28,7 +28,35 @@ public sealed partial class MateriasService(MateriasDb db, DependencyClient depe
         return db.Cursos.Where(c => c.TeacherId == yo && c.Paralelo.Carrera.Activa);
     }
     private static readonly Expression<Func<Curso, CursoView>> VistaCurso = c => new CursoView(c.Id, c.MateriaId, c.Materia.Codigo, c.Materia.Nombre, c.Materia.Creditos, c.Materia.HorasTotales,
-        c.Materia.Carrera.Codigo, c.Materia.Carrera.Nombre, c.Paralelo.Nivel, c.Paralelo.Letra, c.Paralelo.PeriodoId, c.Paralelo.Periodo.Nombre, c.TeacherId, c.Paralelo.Malla.Version, c.Paralelo.Periodo.Estado);
+        c.Materia.Carrera.Codigo, c.Materia.Carrera.Nombre, c.Paralelo.Nivel, c.Paralelo.Letra, c.Paralelo.PeriodoId, c.Paralelo.Periodo.Nombre, c.TeacherId, c.Paralelo.Malla.Version, c.Paralelo.Periodo.Estado, "");
+
+    // Identificador del curso en Moodle («Número de ID del curso»): materia + año y meses del período + paralelo. Lo genera SOLO el sistema:
+    // nadie lo escribe ni lo cambia. Es único: si dos cursos darían el mismo, el segundo en crearse lleva un sufijo (-2, -3…) y el primero conserva el suyo,
+    // así un código ya entregado nunca cambia.
+    public static string CodigoMoodleBase(string materia, string periodo, string paralelo)
+    {
+        var anio = System.Text.RegularExpressions.Regex.Match(periodo, @"\d{4}").Value;
+        var meses = string.Concat(System.Text.RegularExpressions.Regex.Matches(periodo, @"[A-Za-zÁÉÍÓÚÑáéíóúñ]{3,}").Select(m => char.ToUpperInvariant(m.Value[0])));
+        return string.Join('-', new[] { materia, anio + (meses.Length > 4 ? meses[..4] : meses), paralelo }.Where(x => x.Length > 0));
+    }
+    private async Task<Dictionary<int, string>> CodigosMoodle(CancellationToken ct)
+    {
+        var filas = await db.Cursos.AsNoTracking().OrderBy(c => c.Id).Select(c => new { c.Id, Materia = c.Materia.Codigo, Letra = c.Paralelo.Letra, Periodo = c.Paralelo.Periodo.Nombre }).ToListAsync(ct);
+        var usados = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        var codigos = new Dictionary<int, string>();
+        foreach (var f in filas)
+        {
+            var baseCodigo = CodigoMoodleBase(f.Materia, f.Periodo, f.Letra);
+            var n = usados[baseCodigo] = usados.GetValueOrDefault(baseCodigo) + 1;
+            codigos[f.Id] = n == 1 ? baseCodigo : $"{baseCodigo}-{n}";
+        }
+        return codigos;
+    }
+    private async Task<List<CursoView>> ConCodigo(List<CursoView> cursos, CancellationToken ct)
+    {
+        var codigos = await CodigosMoodle(ct);
+        return [.. cursos.Select(c => c with { CodigoMoodle = codigos.GetValueOrDefault(c.Id, "") })];
+    }
     private Task<int?> PeriodoActivoId(CancellationToken ct) => db.Periodos.Where(p => p.Activo).Select(p => (int?)p.Id).FirstOrDefaultAsync(ct);
 
     public async Task<List<CarreraView>> Carreras(string? estado, ClaimsPrincipal user, CancellationToken ct)
@@ -169,10 +197,14 @@ public sealed partial class MateriasService(MateriasDb db, DependencyClient depe
             var letra = Normalizar(paralelo);
             query = query.Where(c => c.Paralelo.Letra == letra);
         }
-        return await query.OrderBy(c => c.Paralelo.Carrera.Codigo).ThenBy(c => c.Paralelo.Nivel).ThenBy(c => c.Paralelo.Letra).ThenBy(c => c.Materia.OrdenNivel).Select(VistaCurso).ToListAsync(ct);
+        var lista = await query.OrderBy(c => c.Paralelo.Carrera.Codigo).ThenBy(c => c.Paralelo.Nivel).ThenBy(c => c.Paralelo.Letra).ThenBy(c => c.Materia.OrdenNivel).Select(VistaCurso).ToListAsync(ct);
+        return await ConCodigo(lista, ct);
     }
-    public async Task<CursoView> Curso(int id, ClaimsPrincipal user, CancellationToken ct) =>
-        await CursosVisibles(user).AsNoTracking().Where(c => c.Id == id).Select(VistaCurso).SingleOrDefaultAsync(ct) ?? throw new ApiException(404, "Curso no encontrado o no asignado a tu cuenta.");
+    public async Task<CursoView> Curso(int id, ClaimsPrincipal user, CancellationToken ct)
+    {
+        var curso = await CursosVisibles(user).AsNoTracking().Where(c => c.Id == id).Select(VistaCurso).SingleOrDefaultAsync(ct) ?? throw new ApiException(404, "Curso no encontrado o no asignado a tu cuenta.");
+        return (await ConCodigo([curso], ct))[0];
+    }
     // Los cursos de períodos finalizados conservan a su docente: son parte del historial.
     public async Task<object> LiberarDocente(int teacherId, CancellationToken ct)
     {
@@ -197,6 +229,6 @@ public sealed partial class MateriasService(MateriasDb db, DependencyClient depe
         }
         curso.TeacherId = teacherId;
         await db.SaveChangesAsync(ct);
-        return await db.Cursos.AsNoTracking().Where(c => c.Id == id).Select(VistaCurso).SingleAsync(ct);
+        return (await ConCodigo([await db.Cursos.AsNoTracking().Where(c => c.Id == id).Select(VistaCurso).SingleAsync(ct)], ct))[0];
     }
 }

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EduMonitor.Evaluaciones.Moodle;
 
-public record EstadoVinculoMoodle(bool Vinculado, Uri? UrlCurso);
+public record EstadoVinculoMoodle(bool Vinculado, Uri? UrlCurso, string? Codigo = null);
 
 public sealed class ResumenMoodle
 {
@@ -66,15 +66,19 @@ public sealed class SincronizacionMoodle(EvaluacionesDb db, AccesoCursos acceso,
 
     public async Task<EstadoVinculoMoodle> Estado(int cursoId, CancellationToken ct)
     {
-        await acceso.Curso(cursoId, ct);
-        var id = await db.Set<VinculoMoodle>().Where(v => v.CursoId == cursoId)
-            .Select(v => (int?)v.MoodleId).SingleOrDefaultAsync(ct);
-        return new(id.HasValue, id.HasValue ? cliente.UrlCurso(id.Value) : null);
+        var curso = await acceso.Curso(cursoId, ct);
+        var vinculo = await db.Set<VinculoMoodle>().AsNoTracking().Where(v => v.CursoId == cursoId).SingleOrDefaultAsync(ct);
+        // Código: el guardado si ya está vinculado; si no, el que genera el sistema para este curso (único y fijo).
+        return new(vinculo is not null, vinculo is not null ? cliente.UrlCurso(vinculo.MoodleId) : null, vinculo?.Codigo ?? curso.CodigoMoodle);
     }
 
-    public async Task<VinculoMoodle> Vincular(int cursoId, string codigo, CancellationToken ct)
+    // El identificador del curso en Moodle lo genera el sistema (Materias) y no se puede elegir ni cambiar: si llega otro, se rechaza.
+    public async Task<VinculoMoodle> Vincular(int cursoId, string? codigoPedido, CancellationToken ct)
     {
-        await acceso.Curso(cursoId, ct);
+        var curso = await acceso.Curso(cursoId, ct);
+        var codigo = curso.CodigoMoodle ?? throw new ApiException(503, "No se pudo obtener el identificador de este curso. Inténtalo de nuevo.");
+        if (!string.IsNullOrWhiteSpace(codigoPedido) && codigoPedido.Trim() != codigo)
+            throw new ApiException(400, $"El identificador del curso en Moodle lo genera el sistema y no se puede cambiar. Para este curso debe ser «{codigo}».");
         var id = await cliente.Resolver(codigo, ct);
         await cliente.Aula(id, codigo, ct);
         var vinculo = await db.Set<VinculoMoodle>().SingleOrDefaultAsync(v => v.CursoId == cursoId || v.MoodleId == id, ct);

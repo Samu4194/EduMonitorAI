@@ -15,4 +15,4 @@ public record MallaResultado(int Version, bool NuevaVersion, int Materias, int H
 public record MateriaView(int Id, string Codigo, string CodigoUta, string Nombre, int Nivel, string Unidad, string Tipo, int? HorasContactoDocente, int? HorasPracticoExperimental, int? HorasAutonomas, int HorasTotales, int Creditos, bool CreditosDerivado, int MallaVersion);
 public record PeriodoView(int Id, string Nombre, bool Activo, string Estado);
 public record ParaleloView(int Id, int PeriodoId, string Carrera, int Nivel, string Letra, int MallaVersion);
-public record CursoView(int Id, int MateriaId, string MateriaCodigo, string MateriaNombre, int Creditos, int HorasTotales, string Carrera, string CarreraNombre, int Nivel, string Paralelo, int PeriodoId, string Periodo, int? TeacherId, int MallaVersion, string PeriodoEstado);
+public record CursoView(int Id, int MateriaId, string MateriaCodigo, string MateriaNombre, int Creditos, int HorasTotales, string Carrera, string CarreraNombre, int Nivel, string Paralelo, int PeriodoId, string Periodo, int? TeacherId, int MallaVersion, string PeriodoEstado, string CodigoMoodle = "");

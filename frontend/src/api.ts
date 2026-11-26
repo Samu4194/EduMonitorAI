@@ -76,6 +76,8 @@ export type Curso = {
   periodo: string;
   teacherId: number | null;
   mallaVersion: number;
+  // Identificador del curso en Moodle («Número de ID del curso»): lo genera el sistema, es único y no se puede cambiar.
+  codigoMoodle?: string;
   // Estado del período del curso: con «Finalizado» el curso es de solo lectura.
   periodoEstado: string;
 };
