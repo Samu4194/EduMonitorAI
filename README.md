@@ -1,6 +1,6 @@
-﻿# EduMonitor AI — Sprint 1 y Sprint 2
+﻿# EduMonitor AI — Sprints 1, 2 y 3
 
-Plataforma académica local con React + TypeScript, cuatro APIs independientes ASP.NET Core 10, Gateway YARP, Entity Framework Core y SQL Server. Interfaz en español. No utiliza Moodle, IA generativa ni servicios externos de IA.
+Plataforma académica local con React + TypeScript, cinco APIs independientes ASP.NET Core 10, Gateway YARP, Entity Framework Core y SQL Server. Interfaz en español. Se integra con Moodle (lectura de matrícula y notas) y su agente académico usa IA local (Ollama) o en la nube (Gemini), con plantillas de respaldo si ninguna está disponible.
 
 ## Inicio rápido en este equipo
 
@@ -14,6 +14,8 @@ En VS Code, hacer clic en un `.cmd` muestra su código; para ejecutarlo usa el E
 
 **Todo se ejecuta ahora en Docker**, incluida la interfaz. No hace falta iniciar una API aparte ni instalar SQL Server Express. `Detener EduMonitor.cmd` detiene los contenedores del proyecto y conserva los datos.
 
+**Una sola base de datos.** Por defecto SQL Server corre en un contenedor de Docker y sus datos viven en un volumen del equipo (no se comparten por Git: cada persona tiene la suya). Para empezar con algo cargado, ejecuta `.\scripts\Datos-Demo.ps1` (docente y paralelo de demostración) y sigue [datos-demo/LEEME.md](datos-demo/LEEME.md) para los estudiantes y las notas, que salen de Moodle. Si prefieres el SQL Server instalado en Windows, crea el archivo `.local/usar-express.txt` y se usará `compose.express.yaml`; los dos modos guardan en bases distintas, así que no los alternes. `docker compose down -v` borra el volumen de la base: no lo ejecutes si quieres conservar tus datos.
+
 ## Arquitectura
 
 ```mermaid
@@ -23,9 +25,17 @@ flowchart LR
   Gateway --> Usuarios[API Usuarios]
   Gateway --> Materias[API Materias]
   Gateway --> Estudiantes[API Estudiantes]
+  Gateway --> Evaluaciones[API Evaluaciones]
+  Gateway --> Seguimiento[API Seguimiento<br/>agente académico]
   Usuarios --> DBU[(EduMonitor_Usuarios)]
   Materias --> DBM[(EduMonitor_Materias)]
   Estudiantes --> DBE[(EduMonitor_Estudiantes)]
+  Evaluaciones --> DBV[(EduMonitor_Evaluaciones)]
+  Seguimiento --> DBS[(EduMonitor_Seguimiento)]
+  Seguimiento -->|notas, estudiantes y cursos con el JWT| Evaluaciones
+  Seguimiento --> Estudiantes
+  Seguimiento --> Materias
+  Seguimiento -.->|opcional| IA[Ollama local · Gemini]
   Materias -->|JWT y validación de docente| Usuarios
   Estudiantes -->|JWT y validación de materia/asignación| Materias
   Estudiantes -->|Validación de sesión| Usuarios
@@ -39,7 +49,7 @@ No hay claves foráneas entre bases, consultas a tablas ajenas desde las APIs ni
 
 | Historia | Implementación |
 |---|---|
-| HU-01 | Login, validaciones, hash de contraseñas, JWT con las carreras del docente, roles, cierre de sesión, restricciones en backend |
+| HU-01 | Login, validaciones, hash de contraseñas, JWT con las carreras del docente, roles, cierre de sesión, restricciones en backend. La sesión sobrevive a un refresco de la página (el token se guarda en `sessionStorage` y se valida con el servidor al cargar) y termina al cerrar la pestaña, al cerrar sesión o a la hora de iniciarla |
 | HU-02 | Registro, consulta y edición de docentes con su ficha personal (cédula, nombres, apellidos, correo institucional, teléfono, título) y sus carreras; correo y cédula únicos |
 | HU-03 | Catálogo de carreras (alta con código y prefijo UTA únicos asignados por el sistema; baja lógica y reactivación) y mallas curriculares versionadas, cargadas por CSV solo con el período en preparación (créditos y horas), períodos, paralelos y cursos; asignación del docente a una materia en un paralelo, solo entre los docentes de esa carrera |
 | HU-04 | Estudiantes por precarga CSV a una materia de un paralelo (el destino —carrera, nivel, paralelo y materia— siempre se elige al cargar); un estudiante puede cursar materias de distintos niveles y paralelos con cargas independientes, hasta 15 créditos por período; retiro por materia y baja del estudiante; lista de estudiantes de un curso para el docente asignado. Sin matrícula manual |
@@ -47,8 +57,22 @@ No hay claves foráneas entre bases, consultas a tablas ajenas desde las APIs ni
 | HU-06 | Tareas, APE y exámenes de un curso, relacionados con uno o varios temas del mismo curso; filtros por tipo y tema |
 | HU-07 | Calificaciones sobre 10 de los estudiantes precargados del paralelo; ponderaciones por tipo editables (por defecto 30/30/40, deben sumar 100) y nota mínima (7); las notas pendientes no cuentan como cero |
 | HU-08 | Promedio del grupo, estudiantes en riesgo, calificación más baja, resultados por estudiante y rendimiento por tema, con filtros de unidad, tema y estudiante |
+| HU-11 | Motor de reglas del agente académico (servicio Seguimiento): rendimiento bajo, notas críticas, tendencia descendente, tipo de actividad débil, proyección de riesgo de reprobar y alertas del curso. Determinista y con umbrales configurables |
+| HU-12 | Recomendaciones pedagógicas por estudiante en alerta: IA local (Ollama) o en la nube (Gemini) con respaldo de plantillas, sobre contexto anónimo, redactadas en segundo plano |
+| HU-13 | El docente revisa, edita, pide otra versión, rechaza o aprueba cada recomendación y la comunica al estudiante por correo (modo simulado si no hay SMTP); bitácora de cada decisión |
+| HU-14 | Reporte de seguimiento del último análisis, imprimible/PDF y exportable a CSV |
+| Asistente | Chat del docente con preguntas sugeridas y libres, búsqueda de estudiantes por nombre (sin adivinar), seudónimos hacia el modelo, verificador de cifras, historial temporal de 30 días y **ruta de mejora** por estudiante (etapas por actividad pendiente, nota objetivo y temas a reforzar) que se guarda como recomendación, se envía por correo o se descarga en PDF. Ver [docs/AGENTE.md](docs/AGENTE.md) |
+| HU-06 (ajuste) | Cada actividad se relaciona con uno o varios temas del curso (obligatorio al crear si el curso tiene temas); filtro por tema y rendimiento por tema |
 
-El catálogo sale de las mallas curriculares de la facultad (5 carreras, 237 materias) y se carga solo cuando la base de Materias está vacía. Un **curso** es una materia en un paralelo; se crea sin docente al crear el paralelo y el administrador lo asigna después. Cada docente solo ve sus carreras y sus cursos. El estudiante no tiene cuenta de acceso. Los estudiantes no se borran: el administrador los da de baja (dejan de aparecer en listas y notas, que se conservan) y puede reactivarlos, a mano o al volver a venir en un CSV. No hay asistencia ni las funcionalidades del Sprint 3 (agente de recomendaciones).
+HU-09 y HU-10 (integración con Moodle) las desarrolló otra persona del equipo. **Moodle es la fuente de los datos académicos** (EduMonitor solo los lee y nadie los edita a mano; el modo «Manual» queda para desarrollo y pruebas): ver [docs/MOODLE.md](docs/MOODLE.md). El detalle del agente académico está en [docs/AGENTE.md](docs/AGENTE.md).
+
+**Puesta en marcha de Moodle y de la IA en este equipo.**
+
+1. *Moodle:* extrae `MoodleLocal-Portable.zip` en una carpeta nueva (por ejemplo `MoodleLocal`, junto a esta) y ejecuta `Restaurar.ps1` una sola vez (el proyecto Docker se llama `moodleportable`, puerto 8085). Después genera el token de lectura con el PHP de `scripts/moodle/preparar-lectura.php` dentro del contenedor `moodleportable-web-1` y guárdalo como `Moodle__Token=...` en `.local/moodle.env` (ignorado por Git). Recrea el servicio con `docker compose up -d --force-recreate --no-deps evaluaciones`.
+2. *IA local:* instala Ollama (`winget install Ollama.Ollama`) y ejecuta `.\scripts\Preparar-IA.ps1 -Modo Ollama`. Con una tarjeta NVIDIA de 6 GB, `qwen2.5:3b` responde en unos 6 a 8 s por estudiante; el primer uso tras un rato de inactividad tarda más porque el modelo se vuelve a cargar.
+3. *IA en la nube (opcional):* `.\scripts\Preparar-IA.ps1 -Modo Nube` guarda la clave gratuita de Gemini. El modelo por defecto es `gemini-3.5-flash-lite`, porque Google retira `gemini-2.5-flash` el 1 de diciembre de 2026.
+
+El catálogo sale de las mallas curriculares de la facultad (5 carreras, 237 materias) y se carga solo cuando la base de Materias está vacía. Un **curso** es una materia en un paralelo; se crea sin docente al crear el paralelo y el administrador lo asigna después. Cada docente solo ve sus carreras y sus cursos. El estudiante no tiene cuenta de acceso. Los estudiantes no se borran: el administrador los da de baja (dejan de aparecer en listas y notas, que se conservan) y puede reactivarlos, a mano o al volver a venir en un CSV. No hay asistencia.
 
 **Gestión académica (Sprint 2).** Unidades, temas, contenidos, actividades y calificaciones cuelgan de un *curso* (materia + paralelo) y viven en su propio servicio, `evaluaciones`, con su base `EduMonitor_Evaluaciones`. Ese servicio no guarda docentes ni estudiantes: pregunta a Materias si el curso es del docente que consulta (con el JWT reenviado; un curso ajeno responde 404) y a Estudiantes por la lista del paralelo. Solo el docente del curso puede escribir; el administrador solo consulta. Reglas de cálculo: cada tipo de actividad se promedia, y el resultado es el promedio ponderado de los tipos que ya tienen notas; mientras queden actividades pendientes se marca como parcial. Las pantallas de gestión académica aparecen en el portal del docente.
 
@@ -131,7 +155,7 @@ Con los contenedores levantados y el SDK .NET 10 disponible:
 powershell -ExecutionPolicy Bypass -File scripts/Test.ps1
 ```
 
-La suite usa HTTP real a través de Nginx y YARP, los cuatro microservicios y SQL Server real. No usa mocks ni EF InMemory. Comprueba las ocho historias (Sprint 1: inicio de sesión, ficha de docentes, catálogo con paralelos y asignación por carrera, precarga de estudiantes y lista por curso; Sprint 2: contenidos, actividades, calificaciones con ponderaciones y rendimiento), el aislamiento entre bases, la caída/recuperación de Estudiantes y Evaluaciones y el rechazo de cambios de estudiantes si Materias está caído. Son 23 pruebas. Las cédulas de docentes y estudiantes se validan como cédulas ecuatorianas (10 dígitos numéricos y dígito verificador). Las pruebas de disponibilidad detienen servicios brevemente: no las ejecutes mientras otra persona está usando la demostración.
+La suite usa HTTP real a través de Nginx y YARP, los cinco microservicios y SQL Server real. No usa mocks ni EF InMemory. Comprueba las historias (Sprint 1: inicio de sesión, ficha de docentes, catálogo con paralelos y asignación por carrera, precarga de estudiantes y lista por curso; Sprint 2: contenidos, actividades, calificaciones con ponderaciones y rendimiento; Sprint 3: reglas de detección, agente con respaldo de plantillas, revisión y comunicación del docente y reportes), el aislamiento entre bases, la caída/recuperación de Estudiantes y Evaluaciones y el rechazo de cambios de estudiantes si Materias está caído. Son 102 pruebas, 53 de ellas de unidad (motor de reglas, intérprete de respuestas, plantillas, cadena de respaldo, búsqueda de estudiantes, seudónimos, verificador de cifras y ruta de mejora) que no necesitan la aplicación levantada. Las pruebas del agente no dependen de qué IA esté disponible: aceptan origen `Plantilla`, `Local` o `Nube`. Las cédulas de docentes y estudiantes se validan como cédulas ecuatorianas (10 dígitos numéricos y dígito verificador). Las pruebas de disponibilidad detienen servicios brevemente: no las ejecutes mientras otra persona está usando la demostración.
 
 Cada prueba crea registros con un prefijo aleatorio propio y los elimina mediante una conexión SQL de pruebas al terminar; no elimina datos del usuario. Si se interrumpe la suite por fuerza pueden quedar registros identificados como pruebas. No existe endpoint público de borrado.
 
@@ -167,9 +191,9 @@ No ejecutes `docker compose down -v`: elimina el volumen que conserva las bases.
 | SQL Server desde VS Code / SSMS | `127.0.0.1,14333` |
 | Gateway y APIs | Puerto 8080 interno; no publicados en el equipo |
 
-Las bases se llaman `EduMonitor_Usuarios`, `EduMonitor_Materias`, `EduMonitor_Estudiantes` y `EduMonitor_Evaluaciones`. Las contraseñas están en `.local/settings.json`: `UsuariosPassword`, `MateriasPassword`, `EstudiantesPassword`, `EvaluacionesPassword`. Los usuarios SQL son `edumonitor_usuarios`, `edumonitor_materias`, `edumonitor_estudiantes` y `edumonitor_evaluaciones`. `SqlPassword` corresponde al administrador SQL `sa`, usado para inicialización y pruebas. Todo esto es configuración local de desarrollo, no para exponer a Internet.
+Las bases se llaman `EduMonitor_Usuarios`, `EduMonitor_Materias`, `EduMonitor_Estudiantes`, `EduMonitor_Evaluaciones` y `EduMonitor_Seguimiento`. Las contraseñas están en `.local/settings.json`: `UsuariosPassword`, `MateriasPassword`, `EstudiantesPassword`, `EvaluacionesPassword`, `SeguimientoPassword`. Los usuarios SQL son `edumonitor_usuarios`, `edumonitor_materias`, `edumonitor_estudiantes`, `edumonitor_evaluaciones` y `edumonitor_seguimiento`. `SqlPassword` corresponde al administrador SQL `sa`, usado para inicialización y pruebas. Todo esto es configuración local de desarrollo, no para exponer a Internet.
 
-La comunicación interna utiliza los nombres `usuarios`, `materias`, `estudiantes`, `evaluaciones`, `gateway` y `sqlserver`. Las solicitudes internas reenvían el JWT original, de modo que el servicio receptor comprueba la identidad y los permisos. No se utiliza un indicador de rol enviado libremente por React.
+La comunicación interna utiliza los nombres `usuarios`, `materias`, `estudiantes`, `evaluaciones`, `seguimiento`, `gateway` y `sqlserver`. Las solicitudes internas reenvían el JWT original, de modo que el servicio receptor comprueba la identidad y los permisos. No se utiliza un indicador de rol enviado libremente por React.
 
 ## Estructura y desarrollo
 
@@ -216,7 +240,7 @@ El importador comprueba esa condición y se detiene si encuentra datos académic
 
 ## Continuación del proyecto
 
-El Sprint 3 podrá incorporar un servicio C# de recomendaciones deterministas que lea las calificaciones y el rendimiento del servicio Evaluaciones. Esas historias no se implementan ni se simulan todavía.
+El agente académico (Sprint 3) vive en su propio servicio, `seguimiento`, y lee las notas de Evaluaciones sin escribir en ellas. Se puede extender con más reglas en `services/seguimiento/Reglas` o con otro proveedor de IA que hable el protocolo de OpenAI. Ver [docs/AGENTE.md](docs/AGENTE.md).
 
 
 ## Documentos de apoyo

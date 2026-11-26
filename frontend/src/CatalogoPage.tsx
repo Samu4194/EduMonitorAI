@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Library, ArrowUpRight, RefreshCw, X, Plus, Upload, Download, Pencil, Play, Flag, Archive, RotateCcw } from "lucide-react";
+import { Library, ArrowUpRight, X, Plus, Upload, Download, Pencil, Play, Flag, Archive, RotateCcw } from "lucide-react";
 import { api, type Carrera, type MateriaMalla, type Periodo } from "./api";
 import { useResource } from "./useResource";
 import { ErrorBox, Empty, Modal, Toast } from "./components";
@@ -138,10 +138,6 @@ export function CatalogoPage({ admin }: { admin: boolean }) {
             </select>
           </label>
         )}
-        <button className="secondary" disabled={carreras.loading} onClick={carreras.reload}>
-          <RefreshCw size={15} />
-          Actualizar
-        </button>
       </div>
       {!carreras.error && !carreras.loading && !carreras.data.length && (
         <Empty text={estado === "bajas" ? "No hay carreras dadas de baja" : "No hay carreras disponibles para tu cuenta"} />

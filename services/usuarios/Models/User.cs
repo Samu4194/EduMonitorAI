@@ -10,6 +10,8 @@ public class User
     public string Email { get; set; } = "";
     public string PasswordHash { get; set; } = "";
     public string Role { get; set; } = "Teacher";
+    // Un docente dado de baja no puede iniciar sesión ni recibir cursos; sus datos y su historial se conservan.
+    public bool Activo { get; set; } = true;
     public int TokenVersion
     {
         get; set;

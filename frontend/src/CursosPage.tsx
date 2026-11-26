@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Plus, ArrowUpRight, RefreshCw } from "lucide-react";
+import { Plus, ArrowUpRight } from "lucide-react";
 import {
   api,
   type Carrera,
@@ -12,6 +12,8 @@ import {
 import { useResource } from "./useResource";
 import { Modal, ErrorBox, Empty } from "./components";
 
+import { FuenteAcademicaAdmin, VinculoMoodle } from "./MoodleCurso";
+
 const romano = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"];
 
 // Cursos del período para el administrador: paralelos y asignación de docentes. El docente usa «Mis cursos» (CursoAula).
@@ -23,6 +25,7 @@ export function CursosPage() {
     [notice, setNotice] = useState(""),
     [error, setError] = useState(""),
     [lista, setLista] = useState<Curso | null>(null),
+    [moodle, setMoodle] = useState<Curso | null>(null),
     [nuevo, setNuevo] = useState(false);
   const carreras = useResource<Carrera>("/carreras");
   const periodos = useResource<Periodo>("/periodos");
@@ -74,8 +77,8 @@ export function CursosPage() {
         </div>
         <button
           className="primary"
-          disabled={!elegido}
-          title={elegido ? "" : "Elige una carrera y un nivel"}
+          disabled={!carrera}
+          title={carrera ? "" : "Elige una carrera"}
           onClick={() => {
             setNotice("");
             setNuevo(true);
@@ -152,6 +155,7 @@ export function CursosPage() {
           {notice}
         </div>
       )}
+      <FuenteAcademicaAdmin />
       <ErrorBox message={error} />
       <ErrorBox message={carreras.error || cursos.error || docentes.error} retry={() => { carreras.reload(); cursos.reload(); docentes.reload(); }} />
       {!elegido ? (
@@ -164,10 +168,6 @@ export function CursosPage() {
                 ? "Cargando…"
                 : `${visibles.length} ${visibles.length === 1 ? "curso" : "cursos"}`}
             </span>
-            <button className="secondary" disabled={cursos.loading} onClick={cursos.reload}>
-              <RefreshCw size={15} />
-              Actualizar
-            </button>
           </div>
           {!cursos.loading && !cursos.error && !cursos.data.length && (
             <Empty text="Este nivel todavía no tiene paralelos. Agrega uno." />
@@ -214,6 +214,7 @@ export function CursosPage() {
                         <button className="text-button" onClick={() => setLista(c)}>
                           Ver lista <ArrowUpRight size={15} />
                         </button>
+                        <button className="text-button" onClick={() => setMoodle(c)}>Vincular Moodle</button>
                       </td>
                     </tr>
                   ))}
@@ -226,33 +227,45 @@ export function CursosPage() {
       {nuevo && (
         <NuevoParalelo
           carrera={carrera}
-          nivel={Number(nivel)}
+          nivel={nivel ? Number(nivel) : null}
+          niveles={niveles}
           close={() => setNuevo(false)}
-          saved={(letra) => {
+          saved={(letra, nivelCreado) => {
             setNuevo(false);
+            // Se muestra el nivel donde se creó el paralelo para que aparezcan sus cursos.
+            setNivel(String(nivelCreado));
+            setParalelo("");
             setNotice(`Paralelo ${letra} creado con sus cursos.`);
             paralelos.reload();
             cursos.reload();
           }}
         />
       )}
+      {moodle && <VinculoMoodle curso={moodle} close={() => setMoodle(null)} />}
       {lista && <Lista curso={lista} close={() => setLista(null)} />}
     </>
   );
 }
 
+// Los paralelos se nombran con una letra de la A a la E.
+const LETRAS_PARALELO = ["A", "B", "C", "D", "E"];
+
 function NuevoParalelo({
   carrera,
   nivel,
+  niveles,
   close,
   saved,
 }: {
   carrera: string;
-  nivel: number;
+  nivel: number | null;
+  niveles: number;
   close: () => void;
-  saved: (letra: string) => void;
+  saved: (letra: string, nivel: number) => void;
 }) {
-  const [letra, setLetra] = useState(""),
+  // Si todavía no se eligió un nivel en los filtros, se elige aquí (por defecto el primero).
+  const [nivelElegido, setNivelElegido] = useState(nivel ?? 1),
+    [letra, setLetra] = useState(LETRAS_PARALELO[0]),
     [malla, setMalla] = useState(""),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
@@ -264,8 +277,8 @@ function NuevoParalelo({
     setBusy(true);
     setError("");
     try {
-      await api("/paralelos", "POST", { carrera, nivel, letra, malla: malla ? Number(malla) : null });
-      saved(letra.toUpperCase());
+      await api("/paralelos", "POST", { carrera, nivel: nivelElegido, letra, malla: malla ? Number(malla) : null });
+      saved(letra.toUpperCase(), nivelElegido);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -276,8 +289,18 @@ function NuevoParalelo({
     <Modal title="Agregar paralelo" close={close} busy={busy}>
       <form onSubmit={submit}>
         <p className="muted">
-          Se crea en el período activo, con un curso por cada materia del nivel {romano[nivel - 1]}.
+          Se crea en el período activo, con un curso por cada materia del nivel {romano[nivelElegido - 1]}.
         </p>
+        <label>
+          Nivel
+          <select value={nivelElegido} onChange={(e) => setNivelElegido(Number(e.target.value))}>
+            {Array.from({ length: niveles }, (_, i) => i + 1).map((n) => (
+              <option key={n} value={n}>
+                Nivel {romano[n - 1]}
+              </option>
+            ))}
+          </select>
+        </label>
         {datos && datos.versiones > 1 && (
           <label>
             Malla del paralelo
@@ -295,14 +318,13 @@ function NuevoParalelo({
         )}
         <label>
           Letra del paralelo
-          <input
-            required
-            pattern="[A-Za-z]{1,2}"
-            title="Una o dos letras"
-            maxLength={2}
-            value={letra}
-            onChange={(e) => setLetra(e.target.value)}
-          />
+          <select value={letra} onChange={(e) => setLetra(e.target.value)}>
+            {LETRAS_PARALELO.map((l) => (
+              <option key={l} value={l}>
+                Paralelo {l}
+              </option>
+            ))}
+          </select>
         </label>
         <ErrorBox message={error} />
         <div className="modal-actions">

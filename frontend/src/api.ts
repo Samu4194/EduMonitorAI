@@ -16,6 +16,8 @@ export type Docente = {
   telefono: string | null;
   tituloAcademico: string | null;
   carreras: string[];
+  // false = dado de baja: no puede iniciar sesión ni recibir cursos; su historial se conserva.
+  activo: boolean;
 };
 export type Carrera = {
   id: number;
@@ -74,6 +76,8 @@ export type Curso = {
   periodo: string;
   teacherId: number | null;
   mallaVersion: number;
+  // Identificador del curso en Moodle («Número de ID del curso»): lo genera el sistema, es único y no se puede cambiar.
+  codigoMoodle?: string;
   // Estado del período del curso: con «Finalizado» el curso es de solo lectura.
   periodoEstado: string;
 };
@@ -108,10 +112,27 @@ export type ListaEstudiante = {
   nombres: string;
   correo: string;
 };
-let token = "";
+// La sesión sobrevive a un refresco de la página: el token se guarda en sessionStorage (se borra al cerrar la pestaña, a diferencia de
+// localStorage, que lo dejaría guardado para siempre). Al cargar, la aplicación lo valida con el servidor antes de usarlo.
+const CLAVE_SESION = "edumonitor.sesion";
+function leerToken() {
+  try {
+    return sessionStorage.getItem(CLAVE_SESION) ?? "";
+  } catch {
+    return ""; // el navegador puede bloquear el almacenamiento (modo privado, políticas): entonces la sesión vive solo en memoria
+  }
+}
+let token = leerToken();
 export function setToken(value: string) {
   token = value;
+  try {
+    if (value) sessionStorage.setItem(CLAVE_SESION, value);
+    else sessionStorage.removeItem(CLAVE_SESION);
+  } catch {
+    /* sin almacenamiento: la sesión sigue en memoria */
+  }
 }
+export const hayToken = () => token !== "";
 export async function api<T>(
   path: string,
   method = "GET",
@@ -296,3 +317,175 @@ export type EstudianteDetalle = {
   notas: { actividadId: number; actividad: string; tipo: TipoActividad; nota: number | null; temas: string[] }[];
   temas: { temaId: number; tema: string; promedio: number | null; calificadas: number; pendientes: number }[];
 };
+
+// ---- Sprint 3: agente académico (detección de dificultades, recomendaciones, comunicación y reportes) ----
+export type NivelAlerta = "Alto" | "Medio" | "Bajo" | "Sin alertas";
+export type EstadoRecomendacion = "Generando" | "Borrador" | "Aprobada" | "Comunicada" | "Rechazada" | "Reemplazada";
+export type ProveedorIA = { clave: string; origen: "Local" | "Nube"; modelo: string; configurado: boolean; disponible: boolean; detalle: string };
+export type EstadoAgente = { proveedores: ProveedorIA[]; plantillas: boolean; nivelMinimo: string; correoReal: boolean };
+export type HallazgoSeg = { id: number; codigo: string; nivel: NivelAlerta; titulo: string; detalle: string };
+export type ComunicacionSeg = {
+  id: number;
+  recomendacionId: number;
+  canal: string;
+  destinatario: string;
+  asunto: string;
+  cuerpo: string;
+  estado: "Enviado" | "Simulado" | "Error";
+  error: string | null;
+  creadoEn: string;
+  estudiante: string;
+};
+export type RecomendacionSeg = {
+  id: number;
+  estado: EstadoRecomendacion;
+  origen: "Plantilla" | "Local" | "Nube";
+  modelo: string | null;
+  resumen: string;
+  causas: string[];
+  accionesDocente: string[];
+  accionesEstudiante: string[];
+  mensajeEstudiante: string;
+  editada: boolean;
+  version: number;
+  creadoEn: string;
+  actualizadoEn: string;
+  revisadaEn: string | null;
+  motivoRechazo: string | null;
+  comunicacion: ComunicacionSeg | null;
+  // Ruta de mejora, cuando la recomendación nació del asistente.
+  ruta?: Omit<RutaMejora, "estudiante"> & { estudiante?: string } | null;
+};
+export type EstudianteSeg = {
+  estudianteAnalisisId: number;
+  estudianteId: number;
+  apellidos: string;
+  nombres: string;
+  correo: string;
+  resultado: number | null;
+  estado: string;
+  pendientes: number;
+  nivel: NivelAlerta;
+  hallazgos: HallazgoSeg[];
+  recomendacion: RecomendacionSeg | null;
+};
+export type AnalisisSeg = {
+  id: number;
+  estado: "Generando" | "Completado";
+  creadoEn: string;
+  terminadoEn: string | null;
+  totalEstudiantes: number;
+  aRecomendar: number;
+  generadas: number;
+  notaMinima: number;
+  alto: number;
+  medio: number;
+  bajo: number;
+  sinAlertas: number;
+  materia: string;
+  paralelo: string;
+  periodo: string;
+};
+export type PanelSeguimiento = { cursoId: number; soloLectura: boolean; analisis: AnalisisSeg | null; hallazgosCurso: HallazgoSeg[]; estudiantes: EstudianteSeg[] };
+export type ReporteSeguimiento = {
+  cursoId: number;
+  materia: string;
+  paralelo: string;
+  periodo: string;
+  docente: string;
+  generadoEn: string;
+  analisis: AnalisisSeg;
+  recomendaciones: { borrador: number; aprobada: number; comunicada: number; rechazada: number; generando: number };
+  hallazgosCurso: HallazgoSeg[];
+  estudiantes: EstudianteSeg[];
+};
+
+// ---- Asistente académico (chat del docente, rutas de mejora) ----
+export type RutaActividad = { id: number; nombre: string; tipo: string; fecha: string | null; aporte: number; temas: string[] };
+export type RutaEtapa = { numero: number; titulo: string; plazo: string | null; actividades: RutaActividad[]; temas: string[]; debiles?: string[] | null; meta: number | null; acciones: string[] };
+export type RutaTema = { tema: string; promedio: number | null; calificadas: number; evidencia: string[] };
+export type RutaMejora = {
+  tipo: "ruta";
+  estudiante: string;
+  notaMinima: number;
+  resultado: number | null;
+  estado: "Aprobado" | "Asegurado" | "Alcanzable" | "Exigente" | "MuyExigente" | "Imposible" | "SinPendientes" | "SinNotas";
+  situacion: string;
+  promedioRequerido: number | null;
+  maximoPosible: number | null;
+  pendientes: number;
+  temas: RutaTema[];
+  etapas: RutaEtapa[];
+  resumen: string;
+  accionesDocente: string[];
+  mensaje: string;
+  origen: "Plantilla" | "Local" | "Nube";
+  modelo: string | null;
+};
+export type TablaAsistente = { tipo: "tabla"; titulo: string; columnas: string[]; filas: string[][]; notas: string[] };
+export type TarjetaAsistente = TablaAsistente | RutaMejora;
+export type PreguntaPre = { id: string; grupo: string; texto: string; requiereEstudiante: boolean };
+export type PersonaAsist = { id: number; nombre: string; correo: string };
+export type MensajeAsist = {
+  id: number;
+  rol: "docente" | "asistente";
+  tipo: string;
+  texto: string;
+  tarjetas: TarjetaAsistente[];
+  origen: string | null;
+  modelo: string | null;
+  alcance: string | null;
+  verificada: boolean | null;
+  util: boolean | null;
+  creadoEn: string;
+};
+export type ConversacionResumen = { id: number; titulo: string; actualizadoEn: string; venceEn: string; mensajes: number };
+export type ConversacionDetalle = {
+  id: number;
+  titulo: string;
+  venceEn: string;
+  mensajes: MensajeAsist[];
+  alias: { alias: string; estudianteId: number; nombre: string }[];
+};
+
+// Respuesta en flujo (text/event-stream): llama a «alEvento» por cada evento que manda el servidor (inicio, tarjeta, texto, ruta, fin…).
+export async function apiStream(path: string, body: unknown, alEvento: (tipo: string, datos: any) => void, signal: AbortSignal): Promise<void> {
+  let response: Response;
+  try {
+    response = await fetch(`/api${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      body: JSON.stringify(body),
+      signal,
+    });
+  } catch (e) {
+    if ((e as Error).name === "AbortError") throw e;
+    throw new Error("No se pudo conectar con el servicio. Puedes reintentar.");
+  }
+  if (!response.ok) {
+    if (response.status === 401) window.dispatchEvent(new Event("session-expired"));
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.message || (data.errors ? Object.values(data.errors).flat().join(" ") : "No se pudo completar la operación."));
+  }
+  const lector = response.body?.getReader();
+  if (!lector) throw new Error("El navegador no admite respuestas en vivo.");
+  const decodificador = new TextDecoder();
+  let pendiente = "";
+  for (;;) {
+    const { done, value } = await lector.read();
+    if (done) break;
+    pendiente += decodificador.decode(value, { stream: true });
+    let corte: number;
+    while ((corte = pendiente.indexOf("\n\n")) >= 0) {
+      const bloque = pendiente.slice(0, corte);
+      pendiente = pendiente.slice(corte + 2);
+      let tipo = "";
+      let datos = "";
+      for (const linea of bloque.split("\n")) {
+        if (linea.startsWith("event: ")) tipo = linea.slice(7);
+        else if (linea.startsWith("data: ")) datos += linea.slice(6);
+      }
+      if (tipo && datos) alEvento(tipo, JSON.parse(datos));
+    }
+  }
+}

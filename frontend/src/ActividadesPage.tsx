@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Plus, Pencil, Trash2, PenLine } from "lucide-react";
-import { api, type Actividad, type Curso, type TipoActividad } from "./api";
+import { api, type Actividad, type Curso, type TipoActividad, type Unidad } from "./api";
 import { useResource } from "./useResource";
 import { Modal, ErrorBox, Empty, Toast } from "./components";
 import { fecha } from "./AulaComun";
@@ -25,11 +25,18 @@ export function ActividadesTab({
   cambio: () => void;
 }) {
   const [tipo, setTipo] = useState(""),
+    [tema, setTema] = useState(""),
     [edicion, setEdicion] = useState<Actividad | "nueva" | null>(null),
     [notice, setNotice] = useState(""),
     [error, setError] = useState("");
   const actividades = useResource<Actividad>(`/actividades?cursoId=${curso.id}`);
-  const visibles = actividades.data.filter((a) => !tipo || a.tipo === tipo);
+  // Unidades con sus temas: el selector del formulario y el filtro por tema salen de aquí.
+  const unidades = useResource<Unidad>(`/unidades?cursoId=${curso.id}`);
+  const hayTemas = unidades.data.some((u) => u.temas.length > 0);
+  const visibles = actividades.data.filter(
+    (a) => (!tipo || a.tipo === tipo) && (tema === "" ? true : tema === "sin" ? a.temas.length === 0 : a.temas.some((t) => String(t.id) === tema)),
+  );
+  const sinTema = actividades.data.filter((a) => a.temas.length === 0).length;
 
   async function eliminar(a: Actividad) {
     const aviso = a.calificadas ? ` Se perderán las ${a.calificadas} calificaciones registradas.` : "";
@@ -57,6 +64,26 @@ export function ActividadesTab({
             </button>
           ))}
         </div>
+        {hayTemas && (
+          <label className="inline-select">
+            Tema
+            <select value={tema} onChange={(e) => setTema(e.target.value)}>
+              <option value="">Todos los temas</option>
+              {sinTema > 0 && <option value="sin">Sin tema ({sinTema})</option>}
+              {unidades.data
+                .filter((u) => u.temas.length > 0)
+                .map((u) => (
+                  <optgroup key={u.id} label={u.nombre}>
+                    {u.temas.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.nombre}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+            </select>
+          </label>
+        )}
         {!lectura && (
           <button className="primary" onClick={() => setEdicion("nueva")}>
             <Plus size={18} />
@@ -65,6 +92,12 @@ export function ActividadesTab({
         )}
       </div>
       <ErrorBox message={error} />
+      {hayTemas && sinTema > 0 && !lectura && (
+        <p className="aviso" role="status">
+          {sinTema === 1 ? "Hay 1 actividad sin tema." : `Hay ${sinTema} actividades sin tema.`} Relaciónalas con un tema (botón de editar) para que el seguimiento pueda decir
+          qué reforzar.
+        </p>
+      )}
       <ErrorBox message={actividades.error} retry={actividades.reload} />
       {!actividades.loading && !actividades.error && !visibles.length && (
         <Empty text={actividades.data.length ? "No hay actividades de este tipo." : "Este curso todavía no tiene actividades."} />
@@ -76,6 +109,7 @@ export function ActividadesTab({
               <tr>
                 <th>Actividad</th>
                 <th>Tipo</th>
+                <th>Temas</th>
                 <th>Entrega</th>
                 <th>Calificación</th>
                 <th aria-label="Acciones" />
@@ -92,6 +126,19 @@ export function ActividadesTab({
                     </td>
                     <td>
                       <span className={`pill tipo-${a.tipo.toLowerCase()}`}>{a.tipo}</span>
+                    </td>
+                    <td>
+                      {a.temas.length === 0 ? (
+                        <span className="muted">Sin tema</span>
+                      ) : (
+                        <span className="tema-chips">
+                          {a.temas.map((t) => (
+                            <span key={t.id} className="tema-chip" title={t.unidadNombre}>
+                              {t.nombre}
+                            </span>
+                          ))}
+                        </span>
+                      )}
                     </td>
                     <td>{fecha(a.fechaEntrega)}</td>
                     <td>
@@ -128,6 +175,7 @@ export function ActividadesTab({
         <FormularioActividad
           cursoId={curso.id}
           actividad={edicion === "nueva" ? null : edicion}
+          unidades={unidades.data}
           close={() => setEdicion(null)}
           saved={(texto) => {
             setEdicion(null);
@@ -144,11 +192,13 @@ export function ActividadesTab({
 function FormularioActividad({
   cursoId,
   actividad,
+  unidades,
   close,
   saved,
 }: {
   cursoId: number;
   actividad: Actividad | null;
+  unidades: Unidad[];
   close: () => void;
   saved: (texto: string) => void;
 }) {
@@ -156,13 +206,20 @@ function FormularioActividad({
     [tipo, setTipo] = useState<TipoActividad>(actividad?.tipo ?? "Tarea"),
     [descripcion, setDescripcion] = useState(actividad?.descripcion ?? ""),
     [entrega, setEntrega] = useState(actividad?.fechaEntrega ?? ""),
+    [temaIds, setTemaIds] = useState<number[]>(actividad?.temas.map((t) => t.id) ?? []),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
+  const conTemas = unidades.filter((u) => u.temas.length > 0);
+  const alternar = (id: number) => setTemaIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
   async function submit(e: FormEvent) {
     e.preventDefault();
     setError("");
+    if (conTemas.length > 0 && temaIds.length === 0) {
+      setError("Elige al menos un tema: así el seguimiento sabe qué reforzar cuando esta actividad salga mal.");
+      return;
+    }
     setBusy(true);
-    const cuerpo = { nombre, tipo, descripcion: descripcion || null, fechaEntrega: entrega || null };
+    const cuerpo = { nombre, tipo, descripcion: descripcion || null, fechaEntrega: entrega || null, temaIds };
     try {
       if (actividad) await api(`/actividades/${actividad.id}`, "PUT", cuerpo);
       else await api("/actividades", "POST", { cursoId, ...cuerpo });
@@ -196,6 +253,24 @@ function FormularioActividad({
             <input type="date" value={entrega} onChange={(e) => setEntrega(e.target.value)} />
           </label>
         </div>
+        <fieldset className="temas-selector">
+          <legend>Temas que evalúa {conTemas.length > 0 && <span className="muted">(elige uno o varios)</span>}</legend>
+          {conTemas.length === 0 ? (
+            <p className="muted small">Este curso todavía no tiene temas. Créalos en la pestaña Contenido para poder relacionarlos con esta actividad.</p>
+          ) : (
+            conTemas.map((u) => (
+              <div key={u.id} className="temas-unidad">
+                <strong>{u.nombre}</strong>
+                {u.temas.map((t) => (
+                  <label key={t.id} className="check">
+                    <input type="checkbox" checked={temaIds.includes(t.id)} onChange={() => alternar(t.id)} />
+                    {t.nombre}
+                  </label>
+                ))}
+              </div>
+            ))
+          )}
+        </fieldset>
         <label>
           Indicaciones (opcional)
           <textarea rows={2} maxLength={500} value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />

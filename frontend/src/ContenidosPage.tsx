@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Plus, Pencil, Trash2, ChevronUp, ChevronDown, Paperclip, Download, Upload } from "lucide-react";
-import { api, descargar, type ArchivoTema, type Curso, type Unidad, type Tema, type ContenidoMinimo } from "./api";
+import { api, descargar, type Actividad, type ArchivoTema, type Curso, type Unidad, type Tema, type ContenidoMinimo } from "./api";
 import { useResource } from "./useResource";
 import { Modal, ErrorBox, Empty, Toast } from "./components";
 
@@ -11,8 +11,12 @@ type Edicion =
   | { tipo: "contenido"; tema: Tema; contenido?: ContenidoMinimo };
 
 // Pestaña «Contenido» del curso: unidades, temas, contenidos mínimos y material de apoyo (HU-05).
-export function ContenidoTab({ curso, lectura }: { curso: Curso; lectura: boolean }) {
+export function ContenidoTab({ curso, lectura, archivosEditables }: { curso: Curso; lectura: boolean; archivosEditables: boolean }) {
   const unidades = useResource<Unidad>(`/unidades?cursoId=${curso.id}`);
+  // Las actividades se muestran bajo los temas que evalúan, para ver de un vistazo qué se estudia y con qué se califica.
+  const actividades = useResource<Actividad>(`/actividades?cursoId=${curso.id}`);
+  const porTema = new Map<number, Actividad[]>();
+  for (const a of actividades.data) for (const t of a.temas) porTema.set(t.id, [...(porTema.get(t.id) ?? []), a]);
   const [edicion, setEdicion] = useState<Edicion | null>(null),
     [notice, setNotice] = useState(""),
     [error, setError] = useState("");
@@ -58,7 +62,7 @@ export function ContenidoTab({ curso, lectura }: { curso: Curso; lectura: boolea
         <span className="muted">
           {unidades.loading
             ? "Cargando…"
-            : `${unidades.data.length} ${unidades.data.length === 1 ? "unidad" : "unidades"} · ${temas} ${temas === 1 ? "tema" : "temas"}`}
+            : `${unidades.data.length} ${unidades.data.length === 1 ? "unidad" : "unidades"} · ${temas} ${temas === 1 ? "tema" : "temas"} · ${actividades.data.length} ${actividades.data.length === 1 ? "actividad" : "actividades"}`}
         </span>
         {!lectura && (
           <button className="primary" onClick={() => setEdicion({ tipo: "unidad" })}>
@@ -163,7 +167,18 @@ export function ContenidoTab({ curso, lectura }: { curso: Curso; lectura: boolea
                   ))}
                   {!t.contenidos.length && <li className="muted">Sin contenidos mínimos todavía.</li>}
                 </ul>
-                {(t.archivos.length > 0 || !lectura) && (
+                {(porTema.get(t.id)?.length ?? 0) > 0 && (
+                  <div className="tema-actividades">
+                    <small className="muted">Se evalúa con</small>
+                    {porTema.get(t.id)!.map((a) => (
+                      <span className="actividad-chip" key={a.id}>
+                        <span className={`pill tipo-${a.tipo.toLowerCase()}`}>{a.tipo}</span> {a.nombre}
+                        {a.fechaEntrega && <small className="muted"> · entrega {a.fechaEntrega.slice(0, 10).split("-").reverse().join("/")}</small>}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {(t.archivos.length > 0 || archivosEditables) && (
                   <div className="material">
                     <small className="muted">Material del tema</small>
                     {t.archivos.map((a) => (
@@ -176,7 +191,7 @@ export function ContenidoTab({ curso, lectura }: { curso: Curso; lectura: boolea
                         <button className="icon" title="Descargar" aria-label={`Descargar ${a.nombre}`} onClick={() => bajar(a)}>
                           <Download size={14} />
                         </button>
-                        {!lectura && (
+                        {archivosEditables && (
                           <button
                             className="icon peligro"
                             title="Eliminar archivo"
@@ -189,7 +204,7 @@ export function ContenidoTab({ curso, lectura }: { curso: Curso; lectura: boolea
                       </span>
                     ))}
                     {!t.archivos.length && <small className="muted">Sin archivos todavía.</small>}
-                    {!lectura && (
+                    {archivosEditables && (
                       <label className="subir">
                         <Upload size={14} /> Subir archivo
                         <input

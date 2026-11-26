@@ -14,6 +14,8 @@ x-environment: &environment
   Services__Usuarios: http://usuarios:8080
   Services__Materias: http://materias:8080
   Services__Estudiantes: http://estudiantes:8080
+  Services__Evaluaciones: http://evaluaciones:8080
+  Services__Seguimiento: http://seguimiento:8080
 services:
   usuarios:
     <<: *api
@@ -37,6 +39,9 @@ services:
       ConnectionStrings__Default: "Server=host.docker.internal,1433;Database=EduMonitor_Estudiantes;User Id=edumonitor_estudiantes;Password=${ESTUDIANTES_PASSWORD};Encrypt=True;TrustServerCertificate=True;Connect Timeout=3"
   evaluaciones:
     <<: *api
+    env_file:
+      - path: ./.local/moodle.env
+        required: false
     build: {context: ., dockerfile: services/evaluaciones/Dockerfile}
     environment:
       <<: *environment
@@ -44,6 +49,25 @@ services:
       Archivos__Ruta: /data/archivos
     volumes:
       - edumonitor_archivos:/data/archivos
+  seguimiento:
+    <<: *api
+    # Agente académico: la clave de Gemini (opcional) se guarda en .local/agente.env y no se sube a Git.
+    env_file:
+      - path: ./.local/agente.env
+        required: false
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    build: {context: ., dockerfile: services/seguimiento/Dockerfile}
+    environment:
+      <<: *environment
+      ConnectionStrings__Default: "Server=host.docker.internal,1433;Database=EduMonitor_Seguimiento;User Id=edumonitor_seguimiento;Password=${SEGUIMIENTO_PASSWORD};Encrypt=True;TrustServerCertificate=True;Connect Timeout=3"
+  # IA local opcional (docker compose --profile ia-local up -d ollama): modelo de lenguaje que corre en esta máquina, sin internet.
+  ollama:
+    profiles: ["ia-local"]
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    ports: ["127.0.0.1:11434:11434"]
+    volumes:
+      - edumonitor_ollama:/root/.ollama
   gateway:
     restart: unless-stopped
     build: {context: ., dockerfile: gateway/Dockerfile}
@@ -52,6 +76,7 @@ services:
       materias: {condition: service_started}
       estudiantes: {condition: service_started}
       evaluaciones: {condition: service_started}
+      seguimiento: {condition: service_started}
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8080/health/ready"]
       interval: 5s
@@ -70,3 +95,4 @@ services:
       retries: 12
 volumes:
   edumonitor_archivos:
+  edumonitor_ollama:

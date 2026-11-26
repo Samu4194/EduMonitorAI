@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { createRoot } from "react-dom/client";
 import { Users, BookOpen, GraduationCap, Library, LayoutDashboard, LogOut, ChevronRight, ArrowUpRight } from "lucide-react";
-import { api, setToken, type User } from "./api";
+import { api, hayToken, setToken, type User } from "./api";
 import { useResource } from "./useResource";
 import { Brand, ErrorBox } from "./components";
 import { DocentesPage } from "./DocentesPage";
@@ -11,6 +11,8 @@ import { EstudiantesPage } from "./EstudiantesPage";
 import { MisCursos } from "./CursoAula";
 import { confirmarSalida } from "./AulaComun";
 import "./style.css";
+import "./seguimiento.css";
+import "./asistente.css";
 
 // El administrador gestiona la estructura académica. El docente trabaja siempre dentro de sus cursos:
 // el contenido, las actividades, las calificaciones y el rendimiento están dentro de cada curso, no como módulos sueltos.
@@ -25,16 +27,55 @@ const titles: Record<Page, string> = {
 const iconos = { resumen: LayoutDashboard, docentes: Users, carreras: Library, cursos: BookOpen, estudiantes: GraduationCap };
 const titleOf = (page: Page, admin: boolean) => (page === "cursos" && !admin ? "Mis cursos" : page === "carreras" && !admin ? "Mallas curriculares" : titles[page]);
 
+const CLAVE_PAGINA = "edumonitor.pagina";
+const leerPagina = (): Page | null => {
+  try {
+    const v = sessionStorage.getItem(CLAVE_PAGINA);
+    return v && v in titles ? (v as Page) : null;
+  } catch {
+    return null;
+  }
+};
+const guardarPagina = (p: Page) => {
+  try {
+    sessionStorage.setItem(CLAVE_PAGINA, p);
+  } catch {
+    /* sin almacenamiento */
+  }
+};
+
 function App() {
   const [user, setUser] = useState<User | null>(null),
     [page, setPage] = useState<Page>("resumen"),
     // Cambia cada vez que se pulsa el menú: así «Mis cursos» vuelve a la lista aunque ya se estuviera dentro de un curso.
     [visita, setVisita] = useState(0),
     // Dónde está el docente dentro de la página (el curso abierto), para la ruta de la cabecera.
-    [detalle, setDetalle] = useState<string | null>(null),
+    [, setDetalle] = useState<string | null>(null),
     [error, setError] = useState(""),
-    [busy, setBusy] = useState(false);
+    [busy, setBusy] = useState(false),
+    // Al refrescar la página se restaura la sesión guardada: mientras el servidor la valida no se muestra el formulario de ingreso.
+    [restaurando, setRestaurando] = useState(hayToken());
   const admin = user?.role === "Admin";
+  useEffect(() => {
+    if (!hayToken()) return;
+    let activo = true;
+    api<User>("/auth/me")
+      .then((u) => {
+        if (!activo) return;
+        setUser(u);
+        const guardada = leerPagina();
+        // Se vuelve a la página donde se estaba, si el rol la permite; si no, a la de inicio de su rol.
+        setPage(guardada && (u.role === "Admin" || guardada === "cursos" || guardada === "carreras") ? guardada : u.role === "Admin" ? "resumen" : "cursos");
+      })
+      .catch(() => setToken("")) // el token venció o se revocó: se pide ingresar de nuevo
+      .finally(() => activo && setRestaurando(false));
+    return () => {
+      activo = false;
+    };
+  }, []);
+  useEffect(() => {
+    if (user) guardarPagina(page);
+  }, [user, page]);
   useEffect(() => {
     const expired = () => {
       setToken("");
@@ -76,6 +117,12 @@ function App() {
       setBusy(false);
     }
   }
+  if (restaurando)
+    return (
+      <div className="login">
+        <p role="status" className="muted" style={{ margin: "auto" }}>Restaurando tu sesión…</p>
+      </div>
+    );
   if (!user)
     return (
       <div className="login">
@@ -169,20 +216,6 @@ function App() {
         </div>
       </aside>
       <main>
-        <header>
-          <div>
-            Espacio académico
-            <ChevronRight size={14} />
-            {detalle ? titleOf(page, !!admin) : <strong>{titleOf(page, !!admin)}</strong>}
-            {detalle && (
-              <>
-                <ChevronRight size={14} />
-                <strong>{detalle}</strong>
-              </>
-            )}
-          </div>
-          <span className="role-pill">{admin ? "Administración" : "Portal docente"}</span>
-        </header>
         <div className="content">
           <ErrorBox message={error} />
           {page === "resumen" ? (
@@ -200,9 +233,6 @@ function App() {
           ) : (
             <EstudiantesPage key={visita} />
           )}
-          <footer>
-            EduMonitor AI<span>Espacio de gestión académica</span>
-          </footer>
         </div>
       </main>
     </div>

@@ -13,4 +13,4 @@ public record TeacherRequest(
     [Required, MinLength(1, ErrorMessage = "Selecciona al menos una carrera.")] List<string> Carreras,
     [StringLength(128, MinimumLength = 10)] string? Password);
 public record UserView(int Id, string Name, string Email, string Role, string[] Carreras);
-public record TeacherView(int Id, string Name, string Email, string Cedula, string Nombres, string Apellidos, string? Telefono, string? TituloAcademico, string[] Carreras);
+public record TeacherView(int Id, string Name, string Email, string Cedula, string Nombres, string Apellidos, string? Telefono, string? TituloAcademico, string[] Carreras, bool Activo = true);

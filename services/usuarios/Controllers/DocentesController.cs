@@ -7,7 +7,7 @@ namespace EduMonitor.Usuarios.Controllers;
 [ApiController, Authorize(Roles = "Admin"), Route("api/docentes")]
 public class DocentesController(UsuariosService service) : ControllerBase
 {
-    [HttpGet] public async Task<IActionResult> List([FromQuery] string? carrera, CancellationToken ct) => Ok(await service.List(carrera, ct));
+    [HttpGet] public async Task<IActionResult> List([FromQuery] string? carrera, [FromQuery] string? estado, CancellationToken ct) => Ok(await service.List(carrera, estado, ct));
     [HttpGet("{id:int}")] public async Task<IActionResult> Get(int id, CancellationToken ct) => Ok(await service.Get(id, ct));
     [HttpPost]
     public async Task<IActionResult> Create(TeacherRequest input, CancellationToken ct)
@@ -19,4 +19,6 @@ public class DocentesController(UsuariosService service) : ControllerBase
         }, x);
     }
     [HttpPut("{id:int}")] public async Task<IActionResult> Update(int id, TeacherRequest input, CancellationToken ct) => Ok(await service.Save(id, input, ct));
+    [HttpPost("{id:int}/baja")] public async Task<IActionResult> Baja(int id, CancellationToken ct) => Ok(await service.Baja(id, ct));
+    [HttpPost("{id:int}/reactivar")] public async Task<IActionResult> Reactivar(int id, CancellationToken ct) => Ok(await service.Reactivar(id, ct));
 }

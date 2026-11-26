@@ -8,6 +8,8 @@ public class Student
     {
         get; set;
     }
+    public int? MoodleUsuarioId { get; set; }
+    public string? MoodleCodigo { get; set; }
     public string Cedula { get; set; } = "";
     public string Apellidos { get; set; } = "";
     public string Nombres { get; set; } = "";

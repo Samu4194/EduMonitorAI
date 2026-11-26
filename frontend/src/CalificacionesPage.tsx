@@ -1,9 +1,9 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Save, RefreshCw, SlidersHorizontal, Pencil } from "lucide-react";
+import { Save, SlidersHorizontal, Pencil } from "lucide-react";
 import { api, type Curso, type FilaNotas, type Matriz, type Ponderacion } from "./api";
 import { useObject } from "./useResource";
 import { Modal, ErrorBox, Empty, Toast } from "./components";
-import { fmt, fecha, estiloNota, EstadoPill } from "./AulaComun";
+import { fmt, estiloNota, EstadoPill } from "./AulaComun";
 
 // Pestaña «Calificaciones» del curso (HU-07). Sin actividad elegida es la vista general de las notas (solo lectura).
 // Para calificar se elige una actividad: solo esa columna queda a la vista y se puede escribir en ella. Las notas ya guardadas
@@ -39,8 +39,21 @@ export function CalificacionesTab({
   const datos = matriz.data;
   // Si se llega con «Calificar» desde una actividad, su categoría queda elegida
   const tipo = tipoElegido || datos?.actividades.find((a) => String(a.id) === actividad)?.tipo || "";
-  const delTipo = datos?.actividades.filter((a) => !tipo || a.tipo === tipo) ?? [];
+  // Las columnas van agrupadas por tipo (tareas, APE, exámenes), cada grupo en el orden en que se registró.
+  const ordenTipo: Record<string, number> = { Tarea: 0, APE: 1, Examen: 2 };
+  const delTipo = (datos?.actividades.filter((a) => !tipo || a.tipo === tipo) ?? [])
+    .map((a, i) => ({ a, i }))
+    .sort((x, y) => (ordenTipo[x.a.tipo] ?? 9) - (ordenTipo[y.a.tipo] ?? 9) || x.i - y.i)
+    .map((x) => x.a);
   const columnas = delTipo.filter((a) => !actividad || String(a.id) === actividad);
+  const nombreGrupo: Record<string, string> = { Tarea: "Tareas", APE: "APE", Examen: "Exámenes" };
+  const grupos = columnas.reduce<{ tipo: string; cantidad: number }[]>((g, a) => {
+    if (g.length && g[g.length - 1].tipo === a.tipo) g[g.length - 1].cantidad++;
+    else g.push({ tipo: a.tipo, cantidad: 1 });
+    return g;
+  }, []);
+  const inicioGrupo = new Set<number>();
+  grupos.reduce((pos, g) => (inicioGrupo.add(pos), pos + g.cantidad), 0);
   const elegida = actividad ? datos?.actividades.find((a) => String(a.id) === actividad) : undefined;
   // Con una actividad elegida se califica; sin ella es solo la vista general
   const calificando = !!elegida && !lectura;
@@ -147,10 +160,6 @@ export function CalificacionesTab({
               <SlidersHorizontal size={16} />
               Ponderaciones
             </button>
-            <button className="secondary" disabled={busy} onClick={matriz.reload}>
-              <RefreshCw size={15} />
-              Actualizar
-            </button>
             {calificando && (
               <button className="primary" disabled={busy || !pendientesDeGuardar} onClick={() => void guardar()}>
                 <Save size={16} />
@@ -165,7 +174,7 @@ export function CalificacionesTab({
           {elegida ? (
             <>
               <span>
-                {lectura ? "Consultando" : "Calificando"} <strong>{elegida.nombre}</strong> · {elegida.tipo} · {fecha(elegida.fechaEntrega)} ·{" "}
+                {lectura ? "Consultando" : "Calificando"} <strong>{elegida.nombre}</strong> · {elegida.tipo} ·{" "}
                 <strong>
                   {calificadas} de {datos.estudiantes.length}
                 </strong>{" "}
@@ -184,7 +193,7 @@ export function CalificacionesTab({
       )}
       {datos && (
         <p className="muted peso-resumen">
-          Resultado sobre 10 · Tareas {datos.ponderacion.tareas}% · APE {datos.ponderacion.ape}% · Exámenes {datos.ponderacion.examen}% · Nota mínima{" "}
+          Promedio sobre 10 · Tareas {datos.ponderacion.tareas}% · APE {datos.ponderacion.ape}% · Exámenes {datos.ponderacion.examen}% · Nota mínima{" "}
           {datos.ponderacion.notaMinima}
           {!datos.ponderacion.personalizada && " (valores predeterminados)"}
           <span className="leyenda-calor" style={{ marginLeft: 16 }}>
@@ -211,14 +220,19 @@ export function CalificacionesTab({
           <section className="panel table-wrap">
             <table className="notas compacta">
               <thead>
+                <tr className="grupos-fila">
+                  <th rowSpan={2}>Estudiante</th>
+                  {grupos.map((g, i) => (
+                    <th key={i} colSpan={g.cantidad} className={`grupo-cab tipo-${g.tipo.toLowerCase()}`}>
+                      {nombreGrupo[g.tipo] ?? g.tipo} <small>({g.cantidad})</small>
+                    </th>
+                  ))}
+                  <th rowSpan={2}>Promedio</th>
+                </tr>
                 <tr>
-                  <th>Estudiante</th>
-                  {columnas.map((a) => (
-                    <th key={a.id}>
+                  {columnas.map((a, k) => (
+                    <th key={a.id} className={inicioGrupo.has(k) ? "grupo-inicio" : undefined}>
                       {a.nombre}
-                      <small className="block muted">
-                        {a.tipo} · {fecha(a.fechaEntrega)}
-                      </small>
                       {!elegida && !lectura && (
                         <button
                           className="text-button calificar-columna"
@@ -234,7 +248,6 @@ export function CalificacionesTab({
                       )}
                     </th>
                   ))}
-                  <th>Resultado</th>
                 </tr>
               </thead>
               <tbody>
@@ -243,7 +256,8 @@ export function CalificacionesTab({
                     <td>
                       {e.apellidos} {e.nombres}
                     </td>
-                    {columnas.map((a) => {
+                    {columnas.map((a, k) => {
+                      const inicio = inicioGrupo.has(k) ? "grupo-inicio" : undefined;
                       const clave = `${e.estudianteId}:${a.id}`;
                       const guardada = e.notas[String(a.id)];
                       const valor = clave in cambios ? cambios[clave] : guardada === undefined ? "" : String(guardada);
@@ -251,7 +265,7 @@ export function CalificacionesTab({
                       // Vista general o período finalizado: solo se muestra la nota
                       if (!calificando)
                         return (
-                          <td key={a.id}>
+                          <td key={a.id} className={inicio}>
                             <span className={`nota-celda${valor === "" ? " pendiente" : ""}`} style={estiloNota(valor)} aria-label={`Nota de ${nombre}: ${valor === "" ? "pendiente" : valor}`}>
                               {valor === "" ? "—" : valor}
                             </span>
@@ -260,7 +274,7 @@ export function CalificacionesTab({
                       // Nota ya guardada: queda bloqueada hasta que se pida modificarla
                       if (guardada !== undefined)
                         return (
-                          <td key={a.id}>
+                          <td key={a.id} className={inicio}>
                             <button
                               className="nota-celda bloqueada"
                               style={estiloNota(valor)}
@@ -274,7 +288,7 @@ export function CalificacionesTab({
                           </td>
                         );
                       return (
-                        <td key={a.id}>
+                        <td key={a.id} className={inicio}>
                           <input
                             className={`nota-input${invalida(valor) ? " invalida" : ""}${clave in cambios ? " editada" : ""}`}
                             inputMode="decimal"
@@ -299,7 +313,7 @@ export function CalificacionesTab({
             </table>
           </section>
           <p className="muted small">
-            Una casilla vacía es «pendiente» y no cuenta como cero. Dejar vacía una nota que ya estaba guardada la devuelve a pendiente. El resultado combina el
+            Una casilla vacía es «pendiente» y no cuenta como cero. Dejar vacía una nota que ya estaba guardada la devuelve a pendiente. El promedio combina el
             promedio de cada tipo de actividad según sus porcentajes y se marca «parcial» mientras queden notas pendientes.
           </p>
         </>
@@ -443,7 +457,7 @@ function ModalNota({
         <div className="nota-contexto">
           <strong>{nombre}</strong>
           <span>
-            <span className={`pill tipo-${actividad.tipo.toLowerCase()}`}>{actividad.tipo}</span> {actividad.nombre} · {fecha(actividad.fechaEntrega)}
+            <span className={`pill tipo-${actividad.tipo.toLowerCase()}`}>{actividad.tipo}</span> {actividad.nombre}
           </span>
         </div>
         <div className="nota-escenario">
