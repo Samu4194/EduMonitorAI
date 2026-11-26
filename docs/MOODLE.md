@@ -47,7 +47,7 @@ Una **nota 0 es 0**. Una celda vacía, una nota que Moodle todavía debe recalcu
 Lo único que se rechaza es lo ambiguo: estudiantes con el mismo identificador, una actividad con datos contradictorios, un curso sin matrícula o sin actividades calificadas, o una matrícula de Moodle que no coincide con las correspondencias locales.
 
 ## Conflictos
-Una nota vacía en Moodle **no borra** la nota local: se conserva y aparece como conflicto. Si Moodle omite algo que antes estaba vinculado, no se aplica ningún cambio.
+Una nota que se **borra en Moodle** (celda vacía entregada explícitamente por Moodle) se retira también de EduMonitor y vuelve a **pendiente**; nunca se convierte en 0 y no cuenta en los promedios. Si Moodle simplemente no entregó la nota o la está recalculando, no se borra nada y se avisa. Si Moodle omite algo que antes estaba vinculado, se retira (ver arriba) salvo que no llegue contenido alguno.
 
 ## Limitaciones conocidas
 - La sincronización es **manual** (un botón por curso).

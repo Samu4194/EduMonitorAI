@@ -47,6 +47,24 @@ public class MoodleContratoTests
     }
 
     [Fact]
+    public void SoloUnaCeldaExplicitamenteVaciaPermiteRetirarLaNotaLocal()
+    {
+        // 20: sin nota y sin recálculo pendiente = vacía de verdad; 21: sin nota pero Moodle aún recalcula = no es una nota borrada;
+        // 22: nota 0 = un cero real, no una celda vacía.
+        items[0]!.AsObject()["graderaw"] = null;
+        items[2]!.AsObject()["graderaw"] = null;
+        items[2]!.AsObject()["gradeneedsupdate"] = true;
+        items[4]!.AsObject()["graderaw"] = 0;
+        var aula = Leer();
+        Assert.Contains((4, 20), aula.Vacias!);
+        Assert.DoesNotContain((4, 21), aula.Vacias!);
+        Assert.DoesNotContain((4, 22), aula.Vacias!);
+        Assert.Null(aula.Notas[(4, 20)]);
+        Assert.Null(aula.Notas[(4, 21)]);
+        Assert.Equal(0m, aula.Notas[(4, 22)]);
+    }
+
+    [Fact]
     public void DistingueCeroDePendienteAunqueMoodleCuenteAmbosComoCeroEnElTotal()
     {
         items[0]!["graderaw"] = 0;

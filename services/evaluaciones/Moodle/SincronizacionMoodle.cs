@@ -231,9 +231,19 @@ public sealed class SincronizacionMoodle(EvaluacionesDb db, AccesoCursos acceso,
                 var nota = aula.Notas[(alumno.Id, a.Cm)];
                 if (nota is null)
                 {
-                    if (existe)
-                        resumen.Conflictos.Add($"{alumno.Codigo} · {a.Nombre}: Moodle indica pendiente. Se conservó {anterior:0.00}.");
-                    resumen.Omitidos++;
+                    if (existe && aula.Vacias?.Contains((alumno.Id, a.Cm)) == true)
+                    {
+                        // Moodle manda: la nota ya no existe allá, así que aquí vuelve a pendiente (nunca se convierte en 0).
+                        cambios.Add(new(eid, null));
+                        resumen.Actualizados++;
+                        resumen.Avisos.Add($"{alumno.Codigo} · {a.Nombre}: Moodle ya no tiene nota; aquí quedó pendiente (antes {anterior:0.00}).");
+                    }
+                    else
+                    {
+                        if (existe)
+                            resumen.Conflictos.Add($"{alumno.Codigo} · {a.Nombre}: Moodle no entregó la nota ahora; se conservó {anterior:0.00}.");
+                        resumen.Omitidos++;
+                    }
                 }
                 else if (existe && anterior == Calculo.Redondear(nota.Value))
                     resumen.Omitidos++;

@@ -39,7 +39,8 @@ public sealed record ReglasTipos(Regex Examen, Regex Ape)
 //  - Lo que Moodle no entrega o no cuadra no tumba todo el curso: la nota queda «no disponible» y se avisa. Solo se rechaza lo ambiguo
 //    (estudiantes con el mismo identificador, actividades con datos contradictorios, un curso sin matrícula o sin actividades calificadas).
 public record AulaMoodle(List<AlumnoMoodle> Alumnos, List<SeccionMoodle> Secciones, List<ActividadMoodle> Actividades,
-    Dictionary<(int Usuario, int Cm), decimal?> Notas, List<string>? Avisos = null, PesosMoodle? Pesos = null, List<AlumnoMoodle>? Profesores = null)
+    Dictionary<(int Usuario, int Cm), decimal?> Notas, List<string>? Avisos = null, PesosMoodle? Pesos = null, List<AlumnoMoodle>? Profesores = null,
+    HashSet<(int Usuario, int Cm)>? Vacias = null)
 {
     private static void Exigir(bool ok, string mensaje)
     {
@@ -180,6 +181,9 @@ public record AulaMoodle(List<AlumnoMoodle> Alumnos, List<SeccionMoodle> Seccion
 
         var actividades = new Dictionary<int, ActividadMoodle>();
         var notas = new Dictionary<(int, int), decimal?>();
+        // Celdas que Moodle entregó EXPLÍCITAMENTE vacías (sin nota y sin recálculo pendiente). Solo estas permiten retirar una nota local:
+        // una nota que Moodle no entregó o está recalculando no es una nota borrada.
+        var vacias = new HashSet<(int Usuario, int Cm)>();
         var categorias = new Dictionary<int, decimal>();       // categoría de calificación -> peso en el curso
         var tipoDeCategoria = new Dictionary<int, HashSet<string>>();
         foreach (var alumno in alumnos)
@@ -228,6 +232,8 @@ public record AulaMoodle(List<AlumnoMoodle> Alumnos, List<SeccionMoodle> Seccion
                 else if (raw is not null)
                     Avisar($"La nota de {alumno.Codigo} en «{mod.Nombre}» no está lista en Moodle: queda como no disponible.");
                 notas[(alumno.Id, cm)] = valor;
+                if (raw is null && !Verdadero(item, "gradeneedsupdate"))
+                    vacias.Add((alumno.Id, cm));
             }
         }
         Exigir(actividades.Count > 0, "Moodle no tiene actividades calificadas en este curso.");
@@ -271,7 +277,7 @@ public record AulaMoodle(List<AlumnoMoodle> Alumnos, List<SeccionMoodle> Seccion
             if (local is { } l && Math.Abs(l - deMoodle) > 0.05m)
                 Avisar($"El total de Moodle de {alumno.Codigo} ({deMoodle:0.00}) difiere del que calcula EduMonitor ({l:0.00}): revisa la ponderación del curso.");
         }
-        return new(alumnos, secciones, actividades.Values.ToList(), notas, avisos, pesos, profesores);
+        return new(alumnos, secciones, actividades.Values.ToList(), notas, avisos, pesos, profesores, vacias);
     }
 
     // Peso por tipo (en %) si cada categoría del libro agrupa actividades de un solo tipo y están los tres tipos.
