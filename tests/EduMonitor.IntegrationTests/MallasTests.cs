@@ -35,6 +35,9 @@ public sealed class MallasTests : IAsyncLifetime
     private async Task Limpiar() => await Sql("""
         UPDATE EduMonitor_Materias.dbo.Cursos SET TeacherId = NULL WHERE TeacherId IN (SELECT Id FROM EduMonitor_Usuarios.dbo.Users WHERE Email LIKE @run);
         DELETE FROM EduMonitor_Estudiantes.dbo.Students WHERE Cedula LIKE @estudiantes;
+        UPDATE c SET TeacherId = NULL FROM EduMonitor_Materias.dbo.Cursos c JOIN EduMonitor_Materias.dbo.Paralelos p ON p.Id = c.ParaleloId JOIN EduMonitor_Materias.dbo.Carreras ca ON ca.Id = p.CarreraId WHERE ca.Codigo = 'SOF' AND p.Letra = 'ZQ';
+        DELETE c FROM EduMonitor_Materias.dbo.Cursos c JOIN EduMonitor_Materias.dbo.Paralelos p ON p.Id = c.ParaleloId JOIN EduMonitor_Materias.dbo.Carreras ca ON ca.Id = p.CarreraId WHERE ca.Codigo = 'SOF' AND p.Letra = 'ZQ';
+        DELETE p FROM EduMonitor_Materias.dbo.Paralelos p JOIN EduMonitor_Materias.dbo.Carreras ca ON ca.Id = p.CarreraId WHERE ca.Codigo = 'SOF' AND p.Letra = 'ZQ';
         DELETE c FROM EduMonitor_Materias.dbo.Cursos c JOIN EduMonitor_Materias.dbo.Paralelos p ON p.Id = c.ParaleloId JOIN EduMonitor_Materias.dbo.Carreras ca ON ca.Id = p.CarreraId WHERE ca.Nombre LIKE 'Prueba %';
         DELETE p FROM EduMonitor_Materias.dbo.Paralelos p JOIN EduMonitor_Materias.dbo.Carreras ca ON ca.Id = p.CarreraId WHERE ca.Nombre LIKE 'Prueba %';
         DELETE m FROM EduMonitor_Materias.dbo.Materias m JOIN EduMonitor_Materias.dbo.Carreras ca ON ca.Id = m.CarreraId WHERE ca.Nombre LIKE 'Prueba %';
@@ -56,7 +59,7 @@ public sealed class MallasTests : IAsyncLifetime
 
     private static async Task Login(HttpClient client, string email, string password)
     {
-        var r = await client.PostAsJsonAsync("/api/auth/login", new { email, password });
+        var r = await SesionDePrueba.Iniciar(client, new { email, password });
         Assert.Equal(HttpStatusCode.OK, r.StatusCode);
         client.DefaultRequestHeaders.Authorization = new("Bearer", (await r.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("token").GetString());
     }
@@ -348,7 +351,10 @@ public sealed class MallasTests : IAsyncLifetime
         Assert.Equal(2, (await Materias(codigo)).Length);
         Assert.Single((await admin.GetFromJsonAsync<JsonElement>($"/api/estudiantes?carrera={codigo}")).EnumerateArray());
         // El docente se puede asignar a cursos de otras carreras: su carrera de baja ya no cuenta
-        var sof = (await admin.GetFromJsonAsync<JsonElement>("/api/cursos?carrera=SOF&nivel=1")).EnumerateArray().First().GetProperty("id").GetInt32();
+        // La prueba no depende de datos cargados a mano: crea su propio paralelo de Software (y lo borra al terminar)
+        using (var creado = await admin.PostAsJsonAsync("/api/paralelos", new { carrera = "SOF", nivel = 1, letra = "ZQ" }))
+            Assert.True(creado.StatusCode is HttpStatusCode.Created or HttpStatusCode.Conflict, $"No se pudo crear el paralelo de prueba: {(int)creado.StatusCode}");
+        var sof = (await admin.GetFromJsonAsync<JsonElement>("/api/cursos?carrera=SOF&nivel=1&paralelo=ZQ")).EnumerateArray().First().GetProperty("id").GetInt32();
         await Status(HttpStatusCode.OK, admin.PutAsJsonAsync($"/api/cursos/{sof}/docente", new { teacherId = docenteId }));
         await Status(HttpStatusCode.OK, admin.PutAsJsonAsync($"/api/cursos/{sof}/docente", new { teacherId = (int?)null }));
         // Reactivar la devuelve a las listas

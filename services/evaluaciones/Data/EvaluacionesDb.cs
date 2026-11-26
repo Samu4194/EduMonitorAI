@@ -14,6 +14,11 @@ public class EvaluacionesDb(DbContextOptions<EvaluacionesDb> options) : DbContex
     public DbSet<Ponderacion> Ponderaciones => Set<Ponderacion>();
     protected override void OnModelCreating(ModelBuilder b)
     {
+        b.Entity<Ajuste>(e => {
+            e.HasKey(x => x.Clave);
+            e.Property(x => x.Clave).HasMaxLength(60);
+            e.Property(x => x.Valor).HasMaxLength(200);
+        });
         b.Entity<VinculoMoodle>(e => {
             e.HasKey(x => x.CursoId);
             e.Property(x => x.CursoId).ValueGeneratedNever();

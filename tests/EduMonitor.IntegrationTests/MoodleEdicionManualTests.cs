@@ -21,9 +21,8 @@ public class MoodleEdicionManualTests
             if (ruta == null || ruta.HttpMethods.All(m => m == "GET"))
                 continue;
 
-            // Los archivos de apoyo se administran localmente, incluso en un curso vinculado.
-            var archivoLocal = controller == typeof(TemasController) && ruta.Template!.Contains("archivos");
-            Assert.Equal(!archivoLocal, Protegida(controller, action));
+            // Incluye subir y borrar archivos de apoyo: con Moodle como fuente todo el material se administra allá.
+            Assert.True(Protegida(controller, action), $"{controller.Name}.{action.Name} escribe datos académicos sin comprobar la fuente.");
         }
     }
 

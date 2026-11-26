@@ -15,7 +15,7 @@ public sealed class Sprint2Tests : IAsyncLifetime
     private readonly HttpClient admin = Client();
     private const string TeacherPassword = "IntegrationTeacher9!";
     private static HttpClient Client() => new() { BaseAddress = new Uri(Environment.GetEnvironmentVariable("EDUMONITOR_URL") ?? "http://127.0.0.1:5080"), Timeout = TimeSpan.FromSeconds(20) };
-    private string estadoPeriodo = "";
+    private string estadoPeriodo = "", fuentePrevia = "";
     public async Task InitializeAsync()
     {
         await Login(admin, Environment.GetEnvironmentVariable("ADMIN_EMAIL") ?? throw new Exception("Ejecuta scripts/Test.ps1"), Environment.GetEnvironmentVariable("ADMIN_PASSWORD")!);
@@ -23,6 +23,8 @@ public sealed class Sprint2Tests : IAsyncLifetime
         // y al terminar se restaura el estado que tenía.
         estadoPeriodo = (await admin.GetFromJsonAsync<JsonElement>("/api/periodos")).EnumerateArray().First(p => p.GetProperty("activo").GetBoolean()).GetProperty("estado").GetString()!;
         await EstadoDelPeriodo("En curso");
+        fuentePrevia = await FuenteDePrueba.Obtener(admin);
+        await FuenteDePrueba.Cambiar(admin, "Manual");
     }
     private async Task EstadoDelPeriodo(string estado)
     {
@@ -57,12 +59,14 @@ public sealed class Sprint2Tests : IAsyncLifetime
         await cmd.ExecuteNonQueryAsync();
         if (estadoPeriodo.Length > 0)
             await EstadoDelPeriodo(estadoPeriodo);
+        if (fuentePrevia.Length > 0)
+            await FuenteDePrueba.Cambiar(admin, fuentePrevia);
         admin.Dispose();
     }
 
     private static async Task<JsonElement> Login(HttpClient client, string email, string password)
     {
-        var r = await client.PostAsJsonAsync("/api/auth/login", new { email, password });
+        var r = await SesionDePrueba.Iniciar(client, new { email, password });
         Assert.Equal(HttpStatusCode.OK, r.StatusCode);
         var json = await r.Content.ReadFromJsonAsync<JsonElement>();
         client.DefaultRequestHeaders.Authorization = new("Bearer", json.GetProperty("token").GetString());
@@ -239,15 +243,19 @@ public sealed class Sprint2Tests : IAsyncLifetime
         var editada = await d.GetFromJsonAsync<JsonElement>($"/api/actividades/{ape}");
         Assert.Equal("APE 1 corregida", editada.GetProperty("nombre").GetString());
         Assert.Equal("2026-12-15", editada.GetProperty("fechaEntrega").GetString());
+        // Editar sin enviar la lista de temas no desvincula la actividad de los que ya tenía
+        await Status(HttpStatusCode.OK, d.PutAsJsonAsync($"/api/actividades/{ape}", new { nombre = "APE 1 corregida", tipo = "APE", descripcion = "Laboratorio", fechaEntrega = "2026-12-15" }));
+        Assert.Equal(1, (await d.GetFromJsonAsync<JsonElement>($"/api/actividades/{ape}")).GetProperty("temas").GetArrayLength());
         // Escenario 4: validaciones
         await Status(HttpStatusCode.BadRequest, d.PostAsJsonAsync("/api/actividades", Actividad(aula.Curso, "", "Tarea", aula.Tema)));
         await Status(HttpStatusCode.BadRequest, d.PostAsJsonAsync("/api/actividades", Actividad(aula.Curso, "Proyecto", "Proyecto", aula.Tema)));
-        // Una actividad ya no necesita enlazarse a un tema: se crea sin temas (y también sin enviar el campo)
-        await Status(HttpStatusCode.Created, d.PostAsJsonAsync("/api/actividades", Actividad(aula.Curso, "Sin tema", "Tarea")));
-        await Status(HttpStatusCode.Created, d.PostAsJsonAsync("/api/actividades", new { cursoId = aula.Curso, nombre = "Sin campo de temas", tipo = "Examen", descripcion = (string?)null, fechaEntrega = (string?)null }));
+        // Si el curso ya tiene temas, una actividad nueva debe relacionarse con al menos uno (también cuando ni se envía el campo)
+        var sinTema = await MensajeDe(await d.PostAsJsonAsync("/api/actividades", Actividad(aula.Curso, "Sin tema", "Tarea")), HttpStatusCode.BadRequest);
+        Assert.Contains("al menos un tema", sinTema);
+        await Status(HttpStatusCode.BadRequest, d.PostAsJsonAsync("/api/actividades", new { cursoId = aula.Curso, nombre = "Sin campo de temas", tipo = "Examen", descripcion = (string?)null, fechaEntrega = (string?)null }));
         await Status(HttpStatusCode.BadRequest, d.PostAsJsonAsync("/api/actividades", Actividad(aula.Curso, "Tema ajeno", "Tarea", temaVecino)));
         await Status(HttpStatusCode.Conflict, d.PostAsJsonAsync("/api/actividades", Actividad(aula.Curso, "Tarea 1", "Tarea", aula.Tema)));
-        Assert.Equal(5, await SqlCount("SELECT COUNT(*) FROM EduMonitor_Evaluaciones.dbo.Actividades WHERE CursoId=@c", ("@c", aula.Curso)));
+        Assert.Equal(3, await SqlCount("SELECT COUNT(*) FROM EduMonitor_Evaluaciones.dbo.Actividades WHERE CursoId=@c", ("@c", aula.Curso)));
         // Escenario 5: separación por materia y paralelo; un docente ajeno no ve ni cambia nada
         Assert.Equal(0, (await d.GetFromJsonAsync<JsonElement>($"/api/actividades?cursoId={aula.CursoVecino}")).GetArrayLength());
         await Status(HttpStatusCode.NotFound, aula.Otro.GetAsync($"/api/actividades?cursoId={aula.Curso}"));

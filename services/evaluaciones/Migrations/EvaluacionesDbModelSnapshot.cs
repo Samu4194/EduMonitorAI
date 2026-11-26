@@ -72,6 +72,22 @@ namespace EduMonitor.Evaluaciones.Migrations
                     b.ToTable("ActividadTemas");
                 });
 
+            modelBuilder.Entity("EduMonitor.Evaluaciones.Models.Ajuste", b =>
+                {
+                    b.Property<string>("Clave")
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("Valor")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Clave");
+
+                    b.ToTable("Ajuste");
+                });
+
             modelBuilder.Entity("EduMonitor.Evaluaciones.Models.Archivo", b =>
                 {
                     b.Property<int>("Id")

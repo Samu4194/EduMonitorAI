@@ -7,7 +7,7 @@ namespace EduMonitor.Evaluaciones.Services;
 
 // Materias decide quién puede ver un curso: responde 404 si el curso no existe o no es del docente (el JWT se reenvía).
 // Así este servicio no repite las reglas de asignación y un docente nunca llega a los datos de un grupo ajeno.
-public sealed class AccesoCursos(DependencyClient dependencies, IHttpContextAccessor http, EvaluacionesDb db)
+public sealed class AccesoCursos(DependencyClient dependencies, IHttpContextAccessor http, EvaluacionesDb db, FuenteAcademica fuente)
 {
     public const string PeriodoFinalizado = "Finalizado";
     internal bool EdicionManual { get; set; }
@@ -19,8 +19,14 @@ public sealed class AccesoCursos(DependencyClient dependencies, IHttpContextAcce
         var curso = await dependencies.Get<CursoReference>("Materias", $"/api/cursos/{cursoId}", ct);
         if (curso.PeriodoEstado == PeriodoFinalizado && !HttpMethods.IsGet(http.HttpContext?.Request.Method ?? HttpMethods.Get))
             throw new ApiException(409, $"El período {curso.Periodo} finalizó: el curso es de solo lectura.");
-        if (EdicionManual && await db.Set<VinculoMoodle>().AnyAsync(v => v.CursoId == curso.Id, ct))
-            throw new ApiException(409, "Este curso está vinculado a Moodle. Los datos académicos se administran desde Moodle.");
+        if (EdicionManual)
+        {
+            if (await db.Set<VinculoMoodle>().AnyAsync(v => v.CursoId == curso.Id, ct))
+                throw new ApiException(409, "Este curso está vinculado a Moodle. Los datos académicos se administran desde Moodle.");
+            // Con Moodle como fuente nadie edita a mano, ni siquiera un curso que todavía no se vinculó.
+            if (await fuente.Obtener(ct) == FuenteAcademica.Moodle)
+                throw new ApiException(409, "Los datos académicos se cargan desde Moodle. Pide al administrador que vincule este curso con su curso de Moodle.");
+        }
         return curso;
     }
     public Task<List<EstudianteReference>> Estudiantes(int cursoId, CancellationToken ct) => dependencies.Get<List<EstudianteReference>>("Estudiantes", $"/api/estudiantes/curso/{cursoId}", ct);

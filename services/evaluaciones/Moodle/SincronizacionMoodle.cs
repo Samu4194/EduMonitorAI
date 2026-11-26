@@ -24,7 +24,14 @@ public sealed class ResumenMoodle
     {
         get; set;
     }
+    // Elementos que ya no existen en Moodle y se retiraron de EduMonitor.
+    public int Eliminados
+    {
+        get; set;
+    }
     public List<string> Conflictos { get; } = [];
+    // Cosas que Moodle no entregó o que no cuadraron: no impiden sincronizar, pero el docente debe saberlas.
+    public List<string> Avisos { get; } = [];
 }
 
 public sealed class SincronizacionMoodle(EvaluacionesDb db, AccesoCursos acceso, MoodleClient cliente,
@@ -84,10 +91,18 @@ public sealed class SincronizacionMoodle(EvaluacionesDb db, AccesoCursos acceso,
             aula.Alumnos.Any(a => inscritos[a.Id].MoodleCodigo != a.Codigo))
             throw new ApiException(409, "La matrícula Moodle y las correspondencias locales difieren. Solicita la revisión del administrador.");
 
-        var pesos = await calificaciones.Ponderacion(cursoId, ct);
-        if ((pesos.Tareas, pesos.Ape, pesos.Examen, pesos.NotaMinima) != (30m, 30m, 40m, 7m))
-            throw new ApiException(409, "El curso tiene otra ponderación o nota mínima. Se conservó su configuración.");
         var resumen = new ResumenMoodle();
+        resumen.Avisos.AddRange(aula.Avisos ?? []);
+        // Si el libro de Moodle tiene una categoría por tipo de actividad, esa es la ponderación del curso (Moodle manda).
+        if (aula.Pesos is { } pm)
+        {
+            var actual = await calificaciones.Ponderacion(cursoId, ct);
+            if ((actual.Tareas, actual.Ape, actual.Examen) != (pm.Tareas, pm.Ape, pm.Examen))
+            {
+                await calificaciones.GuardarPonderacion(cursoId, new PonderacionRequest(pm.Tareas, pm.Ape, pm.Examen, actual.NotaMinima), ct);
+                resumen.Actualizados++;
+            }
+        }
         var mapa = await db.Set<CorrespondenciaMoodle>().Where(x => x.CursoId == cursoId).ToDictionaryAsync(x => x.Clave, x => x.LocalId, ct);
         var vistos = new HashSet<string>();
         async Task<int> Resolver(string clave, Func<Task<int>> crear)
@@ -103,6 +118,7 @@ public sealed class SincronizacionMoodle(EvaluacionesDb db, AccesoCursos acceso,
         var unidades = await contenidos.Unidades(cursoId, ct);
         var actividades = (await contenidos.Actividades(cursoId, null, null, ct)).ToDictionary(x => x.Id);
         var temasPorUnidad = new Dictionary<int, Dictionary<int, int>>();
+        var temasDeMoodle = aula.Secciones.ToDictionary(s => s.Id, s => s.Temas);
         foreach (var seccion in aula.Secciones)
         {
             var key = $"seccion/{seccion.Id}";
@@ -160,23 +176,15 @@ public sealed class SincronizacionMoodle(EvaluacionesDb db, AccesoCursos acceso,
             var key = $"cm/{a.Cm}/{a.Codigo}";
             // El cuestionario de unidad cubre sus temas. En esta aula T1/T2 corresponden a la temática numerada.
             // Las APE del aula de Física tienen una correspondencia explícita por código estable.
-            var temas = temasPorUnidad[a.Seccion];
-            List<int> asociados = a.Tipo switch
-            {
-                "Examen" => temas.Values.ToList(),
-                "APE" when configuracion.GetValue<int?>($"Moodle:TemasPorActividad:{a.Codigo}") is int numero =>
-                    temas.TryGetValue(numero, out var temaId) ? [temaId] : throw new ApiException(409, "Falta el tema configurado para la APE."),
-                "Tarea" when int.TryParse(a.Codigo.Split('-')[^1].AsSpan(1), out var n) && temas.TryGetValue(n, out var id) => [id],
-                _ => []
-            };
-            var aid = await Resolver(key, async () => (await contenidos.CrearActividad(new(cursoId, a.Nombre, a.Tipo, null, null, asociados), ct)).Id);
+            var asociados = AsociarTemas(a, temasPorUnidad[a.Seccion], temasDeMoodle[a.Seccion]);
+            var aid = await Resolver(key, async () => (await contenidos.CrearActividad(new(cursoId, a.Nombre, a.Tipo, null, a.Fecha, asociados), ct)).Id);
             if (mapa.ContainsKey(key))
             {
                 if (!actividades.TryGetValue(aid, out var anterior) || anterior.Tipo != a.Tipo)
                     throw new ApiException(409, "Actividad vinculada ausente o incompatible.");
-                if (anterior.Nombre != a.Nombre || !anterior.Temas.Select(t => t.Id).ToHashSet().SetEquals(asociados))
+                if (anterior.Nombre != a.Nombre || anterior.FechaEntrega != a.Fecha || !anterior.Temas.Select(t => t.Id).ToHashSet().SetEquals(asociados))
                 {
-                    await contenidos.EditarActividad(aid, new(a.Nombre, a.Tipo, anterior.Descripcion, anterior.FechaEntrega, asociados), ct);
+                    await contenidos.EditarActividad(aid, new(a.Nombre, a.Tipo, anterior.Descripcion, a.Fecha, asociados), ct);
                     resumen.Actualizados++;
                 }
                 else
@@ -209,10 +217,70 @@ public sealed class SincronizacionMoodle(EvaluacionesDb db, AccesoCursos acceso,
             if (cambios.Count > 0)
                 await calificaciones.Guardar(aid, new(cambios), ct);
         }
-        if (mapa.Keys.Except(vistos).Any())
-            throw new ApiException(409, "Moodle omitió elementos previamente vinculados. No se aplicaron cambios.");
+        // Moodle manda: lo que ya no existe allá (una actividad o un tema borrados) se retira también aquí, junto con sus notas.
+        var ausentes = mapa.Keys.Except(vistos).ToList();
+        if (ausentes.Count > 0)
+        {
+            // Freno de seguridad: si de Moodle no llegó nada de contenido, lo más probable es una lectura incompleta y no se borra nada.
+            if (aula.Secciones.Count == 0 && aula.Actividades.Count == 0)
+                throw new ApiException(409, "Moodle no devolvió contenido del curso, así que no se retiró nada. Revisa el curso en Moodle e inténtalo de nuevo.");
+            var conjunto = ausentes.ToHashSet();
+            var todosLosTemas = unidades.SelectMany(u => u.Temas).ToDictionary(t => t.Id);
+            // 1) Actividades (se van con sus notas). Antes que los temas, porque un tema usado por una actividad no se puede eliminar.
+            foreach (var k in ausentes.Where(k => k.StartsWith("cm/")))
+            {
+                var nombre = actividades.TryGetValue(mapa[k], out var act) ? act.Nombre : "una actividad";
+                await contenidos.EliminarActividad(mapa[k], ct);
+                resumen.Eliminados++;
+                resumen.Avisos.Add($"Se retiró «{nombre}» (ya no existe en Moodle) junto con sus notas.");
+            }
+            // 2) Unidades completas (arrastran sus temas y contenidos).
+            var unidadesFuera = ausentes.Where(k => System.Text.RegularExpressions.Regex.IsMatch(k, @"^seccion/\d+$")).ToList();
+            foreach (var k in unidadesFuera)
+            {
+                var nombre = unidades.FirstOrDefault(u => u.Id == mapa[k])?.Nombre ?? "una unidad";
+                await contenidos.EliminarUnidad(mapa[k], ct);
+                resumen.Eliminados++;
+                resumen.Avisos.Add($"Se retiró la unidad «{nombre}» (ya no existe en Moodle).");
+            }
+            // 3) Temas sueltos cuya unidad sigue existiendo (sus contenidos se van con ellos).
+            foreach (var k in ausentes.Where(k => System.Text.RegularExpressions.Regex.IsMatch(k, @"^seccion/\d+/tema/\d+$")))
+            {
+                if (conjunto.Contains(k[..k.IndexOf("/tema/", StringComparison.Ordinal)]))
+                    continue;
+                var nombre = todosLosTemas.TryGetValue(mapa[k], out var tema) ? tema.Nombre : "un tema";
+                await contenidos.EliminarTema(mapa[k], ct);
+                resumen.Eliminados++;
+                resumen.Avisos.Add($"Se retiró el tema «{nombre}» (ya no existe en Moodle).");
+            }
+            db.RemoveRange(await db.Set<CorrespondenciaMoodle>().Where(x => x.CursoId == cursoId && ausentes.Contains(x.Clave)).ToListAsync(ct));
+        }
         await db.SaveChangesAsync(ct);
         await tx.CommitAsync(ct);
         return resumen;
+    }
+
+    // A qué temas de su unidad se relaciona una actividad de Moodle:
+    //  - un examen evalúa toda la unidad;
+    //  - si la configuración lo indica (Moodle:TemasPorActividad:código) o el código antiguo lo dice (…-T2), ese tema;
+    //  - si el nombre de la actividad menciona un tema de la unidad, ese tema;
+    //  - sin otra pista, la actividad evalúa la unidad completa (así nunca queda sin tema).
+    private List<int> AsociarTemas(ActividadMoodle a, Dictionary<int, int> temas, List<TemaMoodle> temasMoodle)
+    {
+        if (a.Tipo == "Examen")
+            return [.. temas.Values];
+        if (configuracion.GetValue<int?>($"Moodle:TemasPorActividad:{a.Codigo}") is int configurado)
+            return temas.TryGetValue(configurado, out var temaId) ? [temaId] : throw new ApiException(409, "Falta el tema configurado para la actividad.");
+        if (a.NumeroTema is int n && temas.TryGetValue(n, out var porNumero))
+            return [porNumero];
+        var nombre = Normalizar(a.Nombre);
+        var porNombre = temasMoodle.Where(t => nombre.Contains(Normalizar(t.Nombre))).Select(t => temas[t.Numero]).ToList();
+        return porNombre.Count > 0 ? porNombre : [.. temas.Values];
+    }
+
+    private static string Normalizar(string s)
+    {
+        var d = s.Normalize(System.Text.NormalizationForm.FormD);
+        return new string(d.Where(c => System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark).ToArray()).ToLowerInvariant();
     }
 }

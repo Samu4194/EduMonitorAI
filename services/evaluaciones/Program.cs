@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 builder.AddEduMonitor();
 builder.Services.AddDbContext<EvaluacionesDb>(o => o.UseSqlServer(builder.Configuration.GetConnectionString("Default"), sql => sql.CommandTimeout(5)));
+builder.Services.AddScoped<FuenteAcademica>();
 builder.Services.AddScoped<AccesoCursos>();
 builder.Services.AddSingleton<AlmacenArchivos>();
 builder.Services.AddScoped<ContenidosService>();

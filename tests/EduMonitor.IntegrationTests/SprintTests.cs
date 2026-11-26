@@ -41,11 +41,7 @@ public sealed class SprintTests : IAsyncLifetime
     }
     private static async Task<JsonElement> Login(HttpClient client, string email, string password)
     {
-        var r = await client.PostAsJsonAsync("/api/auth/login", new
-        {
-            email,
-            password
-        });
+        var r = await SesionDePrueba.Iniciar(client, new { email, password });
         Assert.Equal(HttpStatusCode.OK, r.StatusCode);
         var json = await r.Content.ReadFromJsonAsync<JsonElement>();
         client.DefaultRequestHeaders.Authorization = new("Bearer", json.GetProperty("token").GetString());

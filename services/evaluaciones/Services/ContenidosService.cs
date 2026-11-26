@@ -282,6 +282,16 @@ public sealed class ContenidosService(EvaluacionesDb db, AccesoCursos acceso, Al
             throw new ApiException(400, "Algún tema elegido no pertenece a este curso.");
         return ids;
     }
+    // Una actividad creada a mano debe quedar relacionada con al menos un tema: el seguimiento los usa para decir qué reforzar.
+    // Si el curso todavía no tiene temas se permite sin ellos. La sincronización con Moodle no pasa por aquí: ella decide los temas sola.
+    public async Task ExigirTemas(int cursoId, List<int>? temaIds, CancellationToken ct)
+    {
+        await acceso.Curso(cursoId, ct);
+        if (temaIds is { Count: > 0 })
+            return;
+        if (await db.Temas.AnyAsync(t => t.Unidad.CursoId == cursoId, ct))
+            throw new ApiException(400, "Elige al menos un tema para la actividad. Los temas se crean en la pestaña Contenido.");
+    }
     public async Task<ActividadView> CrearActividad(ActividadCreate input, CancellationToken ct)
     {
         await acceso.Curso(input.CursoId, ct);
@@ -299,7 +309,8 @@ public sealed class ContenidosService(EvaluacionesDb db, AccesoCursos acceso, Al
     public async Task<ActividadView> EditarActividad(int id, ActividadEdit input, CancellationToken ct)
     {
         var actividad = await ActividadDe(id, ct);
-        var temas = await TemasDelCurso(actividad.CursoId, input.TemaIds ?? [], ct);
+        // Sin lista de temas (null) se conservan los que ya tiene: editar el nombre o la fecha no debe desvincularla de sus temas.
+        var temas = input.TemaIds is null ? actividad.Temas.Select(x => x.TemaId).ToList() : await TemasDelCurso(actividad.CursoId, input.TemaIds, ct);
         var nombre = Limpio(input.Nombre);
         if (await db.Actividades.AnyAsync(a => a.CursoId == actividad.CursoId && a.Tipo == input.Tipo && a.Nombre == nombre && a.Id != id, ct))
             throw new ApiException(409, "Ya existe una actividad de ese tipo con ese nombre en este curso.");

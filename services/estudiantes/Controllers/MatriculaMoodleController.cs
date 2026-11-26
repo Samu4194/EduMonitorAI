@@ -28,7 +28,27 @@ public class MatriculaMoodleController(EstudiantesDb db, EstudiantesService estu
         var ids = origen.Select(x => x.Id).ToList();
         var locales = await db.Students.Where(s => s.MoodleUsuarioId != null && ids.Contains(s.MoodleUsuarioId.Value))
             .ToDictionaryAsync(s => s.MoodleUsuarioId!.Value, ct);
-        return Ok(origen.Select(p => new { p.Codigo, p.Nombres, p.Apellidos, Cedula = locales.GetValueOrDefault(p.Id)?.Cedula }));
+        // Para quien aún no está enlazado se sugiere la ficha que ya existe con el mismo correo: el administrador solo la confirma.
+        var correos = origen.Select(p => p.Correo.ToLowerInvariant()).ToList();
+        var porCorreo = (await db.Students.Where(s => s.MoodleUsuarioId == null && correos.Contains(s.Correo)).ToListAsync(ct))
+            .GroupBy(s => s.Correo).ToDictionary(g => g.Key, g => g.First());
+        // Si en Moodle el «Número de ID» del usuario es una cédula válida, se toma de ahí y el administrador no la escribe.
+        // Si ya hay una ficha local con esa cédula, se marca como sugerida para que se autorice asociarla.
+        var cedulasMoodle = origen.Where(p => CedulaEcuatoriana.EsValida(p.Codigo)).Select(p => p.Codigo).ToList();
+        var conCedula = (await db.Students.Where(s => s.MoodleUsuarioId == null && cedulasMoodle.Contains(s.Cedula)).Select(s => s.Cedula).ToListAsync(ct)).ToHashSet();
+        return Ok(origen.Select(p =>
+        {
+            var enlazado = locales.GetValueOrDefault(p.Id);
+            var sugerido = enlazado is null && porCorreo.TryGetValue(p.Correo.ToLowerInvariant(), out var s) ? s : null;
+            var deMoodle = enlazado is null && sugerido is null && CedulaEcuatoriana.EsValida(p.Codigo);
+            return new
+            {
+                p.Codigo, p.Nombres, p.Apellidos,
+                Cedula = enlazado?.Cedula ?? sugerido?.Cedula ?? (deMoodle ? p.Codigo : null),
+                Sugerida = sugerido is not null || (deMoodle && conCedula.Contains(p.Codigo)),
+                DeMoodle = deMoodle
+            };
+        }));
     }
 
     [HttpPost]

@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using EduMonitor.Infrastructure;
 
 namespace EduMonitor.Evaluaciones.Moodle;
@@ -68,9 +69,9 @@ public sealed class MoodleClient(HttpClient http, IConfiguration config)
             Leer("core_enrol_get_enrolled_users", Parametros(), ct), Leer("gradereport_user_get_grade_items", Parametros(), ct));
         try
         {
-            return AulaMoodle.Leer(id, codigo, partes[0], partes[1], partes[2]);
+            return AulaMoodle.Leer(id, codigo, partes[0], partes[1], partes[2], ReglasTipos.De(config));
         }
-        catch (Exception ex) when (ex is KeyNotFoundException or InvalidOperationException or FormatException or ArgumentException or System.Xml.XmlException)
+        catch (Exception ex) when (ex is KeyNotFoundException or InvalidOperationException or FormatException or ArgumentException or System.Xml.XmlException or RegexMatchTimeoutException)
         {
             throw new ApiException(409, "El curso contiene datos incompletos o ambiguos. No se aplicaron cambios.");
         }
