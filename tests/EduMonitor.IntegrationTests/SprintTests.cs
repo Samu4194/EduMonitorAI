@@ -446,4 +446,52 @@ public sealed class SprintTests : IAsyncLifetime
         await Status(HttpStatusCode.Created, admin.PostAsJsonAsync("/api/estudiantes", Estudiante(cedula, letra)));
         await Status(HttpStatusCode.OK, teacher.GetAsync($"/api/estudiantes/curso/{curso}"));
     }
+
+    [Fact]
+    public async Task HU01_TeacherDeactivation_FreesCoursesBlocksAccessAndCanBeUndone()
+    {
+        var teacherId = await Teacher("D");
+        var letra = await Paralelo();
+        var cursoId = (await Cursos(letra))[0].GetProperty("id").GetInt32();
+        await Status(HttpStatusCode.OK, admin.PutAsJsonAsync($"/api/cursos/{cursoId}/docente", new { teacherId }));
+        var docente = await TeacherClient("D");
+        await Status(HttpStatusCode.OK, docente.GetAsync("/api/auth/me"));
+        async Task<List<int>> Ids(string consulta) => (await admin.GetFromJsonAsync<JsonElement>("/api/docentes" + consulta)).EnumerateArray().Select(x => x.GetProperty("id").GetInt32()).ToList();
+
+        var baja = await Body(admin.PostAsync($"/api/docentes/{teacherId}/baja", null));
+        Assert.False(baja.GetProperty("activo").GetBoolean());
+        // Sus cursos quedan sin docente y su sesión deja de valer
+        Assert.Equal(JsonValueKind.Null, (await admin.GetFromJsonAsync<JsonElement>($"/api/cursos/{cursoId}")).GetProperty("teacherId").ValueKind);
+        await Status(HttpStatusCode.Unauthorized, docente.GetAsync("/api/auth/me"));
+        using (var intento = await SesionDePrueba.Iniciar(Client(), new { email = $"{run}D@example.test", password = TeacherPassword }))
+        {
+            Assert.Equal(HttpStatusCode.Forbidden, intento.StatusCode);
+            Assert.Contains("baja", await intento.Content.ReadAsStringAsync());
+        }
+        // No puede recibir cursos mientras esté de baja
+        await Status(HttpStatusCode.Conflict, admin.PutAsJsonAsync($"/api/cursos/{cursoId}/docente", new { teacherId }));
+        // Los listados de asignación (por defecto) no lo muestran; el filtro de bajas y «todos» sí
+        Assert.DoesNotContain(teacherId, await Ids("?carrera=SOF"));
+        Assert.Contains(teacherId, await Ids("?estado=bajas"));
+        Assert.Contains(teacherId, await Ids("?estado=todos"));
+        // Repetir la baja no falla ni cambia nada
+        await Status(HttpStatusCode.OK, admin.PostAsync($"/api/docentes/{teacherId}/baja", null));
+
+        var reactivado = await Body(admin.PostAsync($"/api/docentes/{teacherId}/reactivar", null));
+        Assert.True(reactivado.GetProperty("activo").GetBoolean());
+        Assert.Contains(teacherId, await Ids("?carrera=SOF"));
+        await TeacherClient("D");
+        await Status(HttpStatusCode.OK, admin.PutAsJsonAsync($"/api/cursos/{cursoId}/docente", new { teacherId }));
+    }
+
+    [Fact]
+    public async Task HU01_OnlyAdministratorsCanDeactivateTeachers_AndUnknownOnesAreNotFound()
+    {
+        var teacherId = await Teacher("E");
+        var docente = await TeacherClient("E");
+        // Un docente no puede dar de baja a nadie ni a sí mismo
+        await Status(HttpStatusCode.Forbidden, docente.PostAsync($"/api/docentes/{teacherId}/baja", null));
+        await Status(HttpStatusCode.NotFound, admin.PostAsync("/api/docentes/2147483647/baja", null));
+        Assert.Contains(teacherId, (await admin.GetFromJsonAsync<JsonElement>("/api/docentes?estado=activos")).EnumerateArray().Select(x => x.GetProperty("id").GetInt32()));
+    }
 }

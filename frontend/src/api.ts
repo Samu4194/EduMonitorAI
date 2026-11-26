@@ -16,6 +16,8 @@ export type Docente = {
   telefono: string | null;
   tituloAcademico: string | null;
   carreras: string[];
+  // false = dado de baja: no puede iniciar sesión ni recibir cursos; su historial se conserva.
+  activo: boolean;
 };
 export type Carrera = {
   id: number;

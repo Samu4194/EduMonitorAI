@@ -18,7 +18,7 @@ builder.Services.PostConfigure<JwtBearerOptions>(JwtBearerDefaults.Authenticatio
     {
         var db = ctx.HttpContext.RequestServices.GetRequiredService<UsuariosDb>();
         var user = await db.Users.AsNoTracking().SingleOrDefaultAsync(x => x.Id == ctx.Principal!.UserId(), ctx.HttpContext.RequestAborted);
-        if (user is null || user.TokenVersion.ToString() != ctx.Principal!.FindFirstValue("version"))
+        if (user is null || !user.Activo || user.TokenVersion.ToString() != ctx.Principal!.FindFirstValue("version"))
             ctx.Fail("Sesión revocada.");
     }
 });

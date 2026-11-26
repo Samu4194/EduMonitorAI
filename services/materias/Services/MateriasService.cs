@@ -173,6 +173,15 @@ public sealed partial class MateriasService(MateriasDb db, DependencyClient depe
     }
     public async Task<CursoView> Curso(int id, ClaimsPrincipal user, CancellationToken ct) =>
         await CursosVisibles(user).AsNoTracking().Where(c => c.Id == id).Select(VistaCurso).SingleOrDefaultAsync(ct) ?? throw new ApiException(404, "Curso no encontrado o no asignado a tu cuenta.");
+    // Los cursos de períodos finalizados conservan a su docente: son parte del historial.
+    public async Task<object> LiberarDocente(int teacherId, CancellationToken ct)
+    {
+        var cursos = await db.Cursos.Where(c => c.TeacherId == teacherId && c.Paralelo.Periodo.Estado != Periodo.Finalizado).ToListAsync(ct);
+        foreach (var c in cursos)
+            c.TeacherId = null;
+        await db.SaveChangesAsync(ct);
+        return new { liberados = cursos.Count };
+    }
     public async Task<CursoView> Asignar(int id, int? teacherId, CancellationToken ct)
     {
         var curso = await db.Cursos.Include(c => c.Materia).ThenInclude(m => m.Carrera).SingleOrDefaultAsync(c => c.Id == id, ct) ?? throw new ApiException(404, "Curso no encontrado.");
@@ -181,6 +190,8 @@ public sealed partial class MateriasService(MateriasDb db, DependencyClient depe
             ExigirActiva(curso.Materia.Carrera);
             // Usuarios confirma que el docente existe y a qué carreras pertenece. Un docente solo puede dictar materias de su carrera.
             var docente = await dependencies.Get<TeacherReference>("Usuarios", $"/api/docentes/{teacherId}", ct);
+            if (!docente.Activo)
+                throw new ApiException(409, "El docente está dado de baja y no puede recibir cursos. Reactívalo primero.");
             if (!docente.Carreras.Contains(curso.Materia.Carrera.Codigo, StringComparer.OrdinalIgnoreCase))
                 throw new ApiException(409, $"El docente no pertenece a la carrera {curso.Materia.Carrera.Nombre}.");
         }

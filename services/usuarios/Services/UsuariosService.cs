@@ -12,11 +12,11 @@ using Microsoft.IdentityModel.Tokens;
 namespace EduMonitor.Usuarios.Services;
 
 //Generar el token JWT
-public sealed class UsuariosService(UsuariosDb db, IPasswordHasher<User> hasher, IConfiguration config)
+public sealed class UsuariosService(UsuariosDb db, IPasswordHasher<User> hasher, IConfiguration config, DependencyClient dependencies)
 {
     private static string[] CarrerasDe(User u) => u.Profile?.Carreras.Select(c => c.CarreraCodigo).Order().ToArray() ?? [];
     private static UserView View(User u) => new(u.Id, u.Name, u.Email, u.Role, CarrerasDe(u));
-    private static TeacherView TeacherOf(User u) => new(u.Id, u.Name, u.Email, u.Profile?.Cedula ?? "", u.Profile?.Nombres ?? u.Name, u.Profile?.Apellidos ?? "", u.Profile?.Telefono, u.Profile?.TituloAcademico, CarrerasDe(u));
+    private static TeacherView TeacherOf(User u) => new(u.Id, u.Name, u.Email, u.Profile?.Cedula ?? "", u.Profile?.Nombres ?? u.Name, u.Profile?.Apellidos ?? "", u.Profile?.Telefono, u.Profile?.TituloAcademico, CarrerasDe(u), u.Activo);
     private IQueryable<User> WithProfile() => db.Users.Include(x => x.Profile).ThenInclude(p => p!.Carreras);
     public async Task<object> Login(LoginRequest input, CancellationToken ct)
     {
@@ -25,6 +25,9 @@ public sealed class UsuariosService(UsuariosDb db, IPasswordHasher<User> hasher,
         var user = await WithProfile().SingleOrDefaultAsync(x => x.Email == email, ct);
         if (user is null || hasher.VerifyHashedPassword(user, user.PasswordHash, input.Password) == PasswordVerificationResult.Failed)
             throw new ApiException(401, "Correo o contraseña incorrectos.");
+        // Se comprueba después de la contraseña: así la baja no se revela a quien no la conoce.
+        if (!user.Activo)
+            throw new ApiException(403, "Tu cuenta está dada de baja. Comunícate con el administrador.");
         var expires = DateTime.UtcNow.AddHours(1);
         // Un claim "carrera" por cada carrera del docente: los demás servicios segmentan con ellos.
         var claims = new List<Claim>
@@ -50,9 +53,16 @@ public sealed class UsuariosService(UsuariosDb db, IPasswordHasher<User> hasher,
         await db.SaveChangesAsync(ct);
     }
     // carrera opcional: sirve para elegir docentes de una carrera al asignarlos a un curso.
-    public async Task<List<TeacherView>> List(string? carrera, CancellationToken ct)
+    // estado: «activos» (por defecto, lo que usan las asignaciones), «bajas» o «todos».
+    public async Task<List<TeacherView>> List(string? carrera, string? estado, CancellationToken ct)
     {
         var query = WithProfile().AsNoTracking().Where(x => x.Role == "Teacher");
+        query = (estado ?? "activos").ToLowerInvariant() switch
+        {
+            "todos" => query,
+            "bajas" => query.Where(x => !x.Activo),
+            _ => query.Where(x => x.Activo)
+        };
         if (!string.IsNullOrWhiteSpace(carrera))
         {
             var code = carrera.Trim().ToUpperInvariant();
@@ -64,6 +74,26 @@ public sealed class UsuariosService(UsuariosDb db, IPasswordHasher<User> hasher,
     {
         var user = await WithProfile().AsNoTracking().SingleOrDefaultAsync(x => x.Id == id && x.Role == "Teacher", ct);
         return user is null ? throw new ApiException(404, "Docente no encontrado.") : TeacherOf(user);
+    }
+    // Dar de baja: primero se liberan sus cursos en Materias (idempotente) y después se desactiva la cuenta y se revocan sus sesiones.
+    // Si Materias no responde no se hace nada: no puede quedar un docente de baja con cursos asignados.
+    public async Task<TeacherView> Baja(int id, CancellationToken ct)
+    {
+        var user = await WithProfile().SingleOrDefaultAsync(x => x.Id == id && x.Role == "Teacher", ct) ?? throw new ApiException(404, "Docente no encontrado.");
+        if (!user.Activo)
+            return TeacherOf(user);
+        await dependencies.Post<object>("Materias", $"/api/cursos/docente/{id}/liberar", ct);
+        user.Activo = false;
+        user.TokenVersion++;
+        await db.SaveChangesAsync(ct);
+        return TeacherOf(user);
+    }
+    public async Task<TeacherView> Reactivar(int id, CancellationToken ct)
+    {
+        var user = await WithProfile().SingleOrDefaultAsync(x => x.Id == id && x.Role == "Teacher", ct) ?? throw new ApiException(404, "Docente no encontrado.");
+        user.Activo = true;
+        await db.SaveChangesAsync(ct);
+        return TeacherOf(user);
     }
     public async Task<TeacherView> Save(int? id, TeacherRequest input, CancellationToken ct)
     {

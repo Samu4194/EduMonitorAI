@@ -5,10 +5,25 @@ import { useResource } from "./useResource";
 import { Modal, ErrorBox, Empty } from "./components";
 
 export function DocentesPage() {
-  const docentes = useResource<Docente>("/docentes");
+  const [estado, setEstado] = useState<"activos" | "bajas" | "todos">("activos");
+  const docentes = useResource<Docente>(`/docentes?estado=${estado}`);
   const carreras = useResource<Carrera>("/carreras");
   const [edit, setEdit] = useState<Docente | null | undefined>(undefined),
-    [notice, setNotice] = useState("");
+    [notice, setNotice] = useState(""),
+    [error, setError] = useState("");
+  // Dar de baja no borra nada: la cuenta queda inactiva y sus cursos del período sin docente. Se puede reactivar.
+  async function cambiarEstado(d: Docente, baja: boolean) {
+    setNotice("");
+    setError("");
+    if (baja && !window.confirm(`¿Dar de baja a ${d.name}? Dejará de poder iniciar sesión y sus cursos del período actual quedarán sin docente. Su historial se conserva y puedes reactivarlo cuando quieras.`)) return;
+    try {
+      await api(`/docentes/${d.id}/${baja ? "baja" : "reactivar"}`, "POST");
+      setNotice(baja ? `${d.name} quedó dado de baja. Sus cursos del período están sin docente: asígnalos a otra persona en «Cursos».` : `${d.name} fue reactivado.`);
+      docentes.reload();
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
   const nombreCarrera = (codigo: string) =>
     carreras.data.find((c) => c.codigo === codigo)?.nombre ?? codigo;
   // Una carrera dada de baja deja de mostrarse en la ficha del docente (la lista de carreras trae solo las activas).
@@ -41,8 +56,15 @@ export function DocentesPage() {
           {notice}
         </div>
       )}
-      <ErrorBox message={docentes.error} retry={docentes.reload} />
+      <ErrorBox message={error || docentes.error} retry={docentes.reload} />
       <div className="toolbar">
+        <div className="chips-filtro" role="group" aria-label="Estado del docente">
+          {(["activos", "bajas", "todos"] as const).map((e) => (
+            <button key={e} className={estado === e ? "activo" : ""} aria-pressed={estado === e} onClick={() => setEstado(e)}>
+              {e === "activos" ? "Activos" : e === "bajas" ? "De baja" : "Todos"}
+            </button>
+          ))}
+        </div>
         <span className="muted">
           {docentes.loading
             ? "Cargando…"
@@ -52,7 +74,7 @@ export function DocentesPage() {
         </span>
       </div>
       {!docentes.error && !docentes.loading && !docentes.data.length && (
-        <Empty text="Todavía no hay docentes registrados" />
+        <Empty text={estado === "bajas" ? "No hay docentes dados de baja." : estado === "activos" ? "Todavía no hay docentes activos registrados." : "Todavía no hay docentes registrados"} />
       )}
       {docentes.data.length > 0 && (
         <section className="panel table-wrap">
@@ -68,9 +90,10 @@ export function DocentesPage() {
             </thead>
             <tbody>
               {docentes.data.map((d) => (
-                <tr key={d.id}>
+                <tr key={d.id} className={d.activo ? "" : "fila-baja"}>
                   <td>
                     <strong>{d.name}</strong>
+                    {!d.activo && <span className="pill spaced">De baja</span>}
                     {d.tituloAcademico && (
                       <small className="block muted">{d.tituloAcademico}</small>
                     )}
@@ -97,6 +120,15 @@ export function DocentesPage() {
                       <Pencil size={16} />
                       Editar
                     </button>
+                    {d.activo ? (
+                      <button className="secondary" aria-label={`Dar de baja a ${d.name}`} onClick={() => void cambiarEstado(d, true)}>
+                        Dar de baja
+                      </button>
+                    ) : (
+                      <button className="secondary" aria-label={`Reactivar a ${d.name}`} onClick={() => void cambiarEstado(d, false)}>
+                        Reactivar
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
