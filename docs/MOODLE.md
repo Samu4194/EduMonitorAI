@@ -58,3 +58,14 @@ Una nota vacía en Moodle **no borra** la nota local: se conserva y aparece como
 
 ## Puesta en marcha en este equipo
 Ver el README (`Puesta en marcha de Moodle y de la IA`) y `scripts/moodle/README.md`.
+
+## Cursos nuevos en Moodle: permisos de la cuenta de lectura
+
+EduMonitor lee Moodle con una cuenta técnica de solo lectura (`edumonitor_lectura`, rol «Lectura del aula para EduMonitor»). El script
+`scripts/moodle/preparar-lectura.php` le da esas capacidades **solo en el curso de Física**. Un curso nuevo se encuentra por su Número de ID,
+pero al leer su contenido Moodle responde que no hay permiso y EduMonitor muestra «Moodle no dejó leer este curso (core_course_get_contents…)».
+
+Se arregla una sola vez, sin tocar código, en Moodle: **Administración del sitio → Usuarios → Permisos → Definir roles → «Lectura del aula para
+EduMonitor» → Editar** y permitir (todas son de solo lectura) `moodle/course:view`, `moodle/course:viewparticipants`, `moodle/user:viewdetails`,
+`moodle/site:viewuseridentity`, `moodle/user:viewalldetails`, `moodle/grade:viewall`, `gradereport/user:view`, `mod/assign:view` y `mod/quiz:view`.
+La cuenta ya tiene el rol asignado en todo el sitio, así que desde ese momento lee cualquier curso.

@@ -35,7 +35,13 @@ public sealed class MoodleClient(HttpClient http, IConfiguration config)
             if (data.ValueKind == JsonValueKind.Object &&
                 (data.TryGetProperty("exception", out _) || data.TryGetProperty("errorcode", out _) ||
                  data.TryGetProperty("warnings", out var warnings) && warnings.GetArrayLength() > 0))
-                throw new ApiException(502, $"Moodle rechazó o devolvió incompleta la consulta {funcion}.");
+            {
+                // 409 y no 502: un 502 lo muestra la pantalla como «el Gateway no está disponible», y aquí el servicio sí responde; es Moodle quien no deja leer.
+                var codigoError = data.TryGetProperty("errorcode", out var ec) && ec.ValueKind == JsonValueKind.String ? ec.GetString() : null;
+                throw new ApiException(409, $"Moodle no dejó leer este curso ({funcion}{(codigoError is null ? "" : $": {codigoError}")}). " +
+                    "Lo más probable es que la cuenta de lectura de EduMonitor no tenga permiso en este curso: en Moodle, el rol «Lectura del aula para EduMonitor» " +
+                    "debe tener permitidas las capacidades de solo lectura en todo el sitio (ver docs/MOODLE.md).");
+            }
             return data;
         }
         catch (Exception ex) when (ex is HttpRequestException or JsonException || ex is OperationCanceledException && !ct.IsCancellationRequested)
