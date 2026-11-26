@@ -12,8 +12,9 @@ El administrador ve todas las carreras. Un docente solo ve las carreras a las qu
 | GET | `/api/auth/me` | Autenticado | Usuarios |
 | GET | `/api/auth/session` | Autenticado; verifica vigencia | Usuarios |
 | POST | `/api/auth/logout` | Autenticado | Usuarios |
-| GET / POST | `/api/docentes` | Administrador. `GET ?carrera=SOF` filtra por carrera | Usuarios |
+| GET / POST | `/api/docentes` | Administrador. `GET ?carrera=SOF` filtra por carrera y `?estado=activos` (por defecto) `|bajas|todos` por estado | Usuarios |
 | GET / PUT | `/api/docentes/{id}` | Administrador | Usuarios |
+| POST | `/api/docentes/{id}/baja` · `/reactivar` | Administrador. La baja libera sus cursos de períodos no finalizados (Materias, `POST /api/cursos/docente/{id}/liberar`), desactiva la cuenta y revoca sus sesiones; no borra nada. Un docente de baja no inicia sesión (403) ni recibe cursos (409) | Usuarios, Materias |
 | GET | `/api/carreras?estado=` | Administrador: todas (`estado`: `activas` por defecto, `bajas` o `todas`); docente: sus carreras activas | Materias |
 | GET | `/api/carreras/{codigo}/materias?nivel=&malla=` | Igual que arriba (malla curricular). `malla`: la vigente por defecto, un número de versión o `todas` | Materias |
 | POST | `/api/carreras` | Administrador. Crea una carrera: `nombre, modalidad, niveles`. El código y el prefijo UTA los asigna el sistema (únicos, no se reutilizan ni se cambian) | Materias |
@@ -88,6 +89,7 @@ Leer lo puede hacer el administrador o el docente del curso; analizar, editar, a
 | GET | `/api/moodle/fuente` | `{fuente: "Moodle"\|"Manual", moodleConfigurado}`. Cualquier usuario autenticado |
 | PUT | `/api/moodle/fuente` | `{fuente}`. Solo el administrador. Con `Moodle` la edición manual de unidades, temas, actividades y notas responde `409` en todos los cursos |
 | GET | `/api/estudiantes/moodle/{cursoId}` | Matrícula de Moodle con la cédula local o **sugerida por correo** (`sugerida: true`) |
+| GET | `/api/moodle/cursos/{cursoId}/docentes` | Compara el docente asignado en EduMonitor con los profesores matriculados en Moodle: `{asignado, coincide, profesores, avisos}`. Solo informa; la sincronización repite el aviso | Evaluaciones |
 | POST | `/api/moodle/cursos/{cursoId}/sincronizar` | Sincroniza el curso (docente asignado). Devuelve `{creados, actualizados, omitidos, conflictos[], avisos[]}` |
 
 Ver [MOODLE.md](MOODLE.md) para las reglas de lectura.
