@@ -241,7 +241,9 @@ public sealed partial class ServicioAsistente(AccesoCursos acceso, CargadorDatos
             conversacionId = conv.Id,
             titulo = turno.Mostrar(conv.Titulo),
             mensaje = new { id = pregunta.Id, texto = turno.Mostrar(oculto) },
-            alias = turno.Mapa.Select(kv => new AliasView(kv.Key, kv.Value, turno.Nombres()[kv.Key]))
+            // .ToList(): el evento se serializa en otro hilo mientras la respuesta sigue y puede agregar alias nuevos al mapa; una lista diferida
+            // fallaba de vez en cuando con «Collection was modified» (500).
+            alias = turno.Mapa.Select(kv => new AliasView(kv.Key, kv.Value, turno.Nombres()[kv.Key])).ToList()
         }));
 
         if (pre?.Id is Catalogo.Ruta or Catalogo.Rutas)
