@@ -52,8 +52,12 @@ public sealed class MoodleClient(HttpClient http, IConfiguration config)
             ["value"] = codigo
         }, ct);
         var cursos = result.GetProperty("courses");
-        if (cursos.GetArrayLength() != 1)
-            throw new ApiException(409, "El identificador de Moodle no corresponde a un único curso accesible.");
+        // Dos situaciones distintas con un mismo síntoma: decirlas por separado evita confundir «no existe» con «está repetido».
+        if (cursos.GetArrayLength() == 0)
+            throw new ApiException(409, $"En Moodle no existe ningún curso con el Número de ID «{codigo}». Créalo en Moodle y escribe ese valor, tal cual, en " +
+                "«Número de ID del curso» (Ajustes del curso → General). Si ya lo creaste, comprueba que lo escribiste igual y que el curso es visible para la cuenta de lectura de EduMonitor.");
+        if (cursos.GetArrayLength() > 1)
+            throw new ApiException(409, $"En Moodle hay {cursos.GetArrayLength()} cursos con el Número de ID «{codigo}». Debe ser único: corrige el repetido en Moodle.");
         return cursos[0].GetProperty("id").GetInt32();
     }
 
