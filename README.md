@@ -14,6 +14,8 @@ En VS Code, hacer clic en un `.cmd` muestra su código; para ejecutarlo usa el E
 
 **Todo se ejecuta ahora en Docker**, incluida la interfaz. No hace falta iniciar una API aparte ni instalar SQL Server Express. `Detener EduMonitor.cmd` detiene los contenedores del proyecto y conserva los datos.
 
+**Una sola base de datos.** Por defecto SQL Server corre en un contenedor de Docker y sus datos viven en un volumen del equipo (no se comparten por Git: cada persona tiene la suya). Para empezar con algo cargado, ejecuta `.\scripts\Datos-Demo.ps1` (docente y paralelo de demostración) y sigue [datos-demo/LEEME.md](datos-demo/LEEME.md) para los estudiantes y las notas, que salen de Moodle. Si prefieres el SQL Server instalado en Windows, crea el archivo `.local/usar-express.txt` y se usará `compose.express.yaml`; los dos modos guardan en bases distintas, así que no los alternes. `docker compose down -v` borra el volumen de la base: no lo ejecutes si quieres conservar tus datos.
+
 ## Arquitectura
 
 ```mermaid
@@ -66,7 +68,7 @@ HU-09 y HU-10 (integración con Moodle) las desarrolló otra persona del equipo.
 
 **Puesta en marcha de Moodle y de la IA en este equipo.**
 
-1. *Moodle:* extrae `MoodleLocal-Portable.zip` en una carpeta nueva (por ejemplo `MoodleLocal`, junto a esta) y ejecuta `Restaurar.ps1` una sola vez (el proyecto Docker se llama `moodleportable`, puerto 8085). Después genera el token de lectura con el PHP de `scripts/moodle/preparar-lectura.php` dentro del contenedor `moodleportable-web-1` y guárdalo como `Moodle__Token=...` en `.local/moodle.env` (ignorado por Git). Recrea el servicio con `docker compose -f compose.express.yaml up -d --force-recreate --no-deps evaluaciones`.
+1. *Moodle:* extrae `MoodleLocal-Portable.zip` en una carpeta nueva (por ejemplo `MoodleLocal`, junto a esta) y ejecuta `Restaurar.ps1` una sola vez (el proyecto Docker se llama `moodleportable`, puerto 8085). Después genera el token de lectura con el PHP de `scripts/moodle/preparar-lectura.php` dentro del contenedor `moodleportable-web-1` y guárdalo como `Moodle__Token=...` en `.local/moodle.env` (ignorado por Git). Recrea el servicio con `docker compose up -d --force-recreate --no-deps evaluaciones`.
 2. *IA local:* instala Ollama (`winget install Ollama.Ollama`) y ejecuta `.\scripts\Preparar-IA.ps1 -Modo Ollama`. Con una tarjeta NVIDIA de 6 GB, `qwen2.5:3b` responde en unos 6 a 8 s por estudiante; el primer uso tras un rato de inactividad tarda más porque el modelo se vuelve a cargar.
 3. *IA en la nube (opcional):* `.\scripts\Preparar-IA.ps1 -Modo Nube` guarda la clave gratuita de Gemini. El modelo por defecto es `gemini-3.5-flash-lite`, porque Google retira `gemini-2.5-flash` el 1 de diciembre de 2026.
 

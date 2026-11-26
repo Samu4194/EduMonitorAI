@@ -4,12 +4,14 @@ param(
     # Nube: guarda la clave gratuita de Google Gemini para usar IA en la nube.
     [ValidateSet('Ollama', 'Docker', 'Nube')][string]$Modo = 'Ollama',
     [string]$Modelo = 'qwen2.5:3b',
-    [string]$Compose = 'compose.express.yaml'
+    # Vacío = el mismo modo con el que arrancas (Docker por defecto; Express solo si existe .local/usar-express.txt).
+    [string]$Compose = ''
 )
 # Prepara el agente académico (Sprint 3). Es opcional: sin IA el sistema redacta las recomendaciones con plantillas.
 $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot/Common.ps1"
 Set-Location $ProjectRoot
+if (!$Compose) { $Compose = if (Test-Path (Join-Path $LocalDir 'usar-express.txt')) { 'compose.express.yaml' } else { 'compose.yaml' } }
 
 switch ($Modo) {
     'Ollama' {

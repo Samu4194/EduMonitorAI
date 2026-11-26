@@ -30,7 +30,7 @@ if (!(Test-Docker)) {
 # 2. SQL Server local
 Step "Comprobando SQL Server ($sqlService)"
 $svc = Get-Service $sqlService -ErrorAction SilentlyContinue
-if (!$svc) { throw "No existe el servicio $sqlService. Instala SQL Server o usa 'Iniciar EduMonitor.cmd' sin compose.express.yaml." }
+if (!$svc) { throw "No existe el servicio $sqlService. Instala SQL Server, o borra .local/usar-express.txt para usar la base en Docker (lo normal)." }
 if ($svc.Status -ne 'Running') {
     try { Start-Service $sqlService; $svc.WaitForStatus('Running', '00:01:00') }
     catch { throw "No se pudo iniciar $sqlService. Abre PowerShell como administrador y ejecuta: Start-Service $sqlService" }
