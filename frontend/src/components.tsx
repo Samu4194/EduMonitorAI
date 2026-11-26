@@ -49,6 +49,9 @@ export function Modal({
   busy?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  // Si ya se escribió algo, la tecla Esc no cierra el formulario: algunos navegadores (p. ej. Brave) la envían también al cerrar la lista
+  // de autocompletado del correo, y se perdería lo que el usuario llevaba escrito. Se cierra con «Cancelar» o con la X.
+  const editado = useRef(false);
   useEffect(() => {
     const dialog = ref.current;
     dialog?.showModal();
@@ -57,9 +60,10 @@ export function Modal({
   return (
     <dialog
       ref={ref}
+      onInput={() => (editado.current = true)}
       onCancel={(e) => {
         e.preventDefault();
-        if (!busy) close();
+        if (!busy && !editado.current) close();
       }}
       aria-label={title}
     >

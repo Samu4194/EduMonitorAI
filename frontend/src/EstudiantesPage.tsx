@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { UserMinus, UserCheck, Pencil, RefreshCw, Upload, Download, X, RotateCcw } from "lucide-react";
+import { UserMinus, UserCheck, Pencil, Upload, Download, X, RotateCcw } from "lucide-react";
 import { api, type Carrera, type Estudiante, type Inscripcion, type MateriaMalla, type Paralelo } from "./api";
 import { useResource } from "./useResource";
 import { Modal, ErrorBox, Empty } from "./components";
@@ -221,10 +221,6 @@ export function EstudiantesPage() {
               ? "Datos no disponibles"
               : `${estudiantes.data.length} ${estudiantes.data.length === 1 ? "registro" : "registros"}`}
         </span>
-        <button className="secondary" disabled={estudiantes.loading} onClick={estudiantes.reload}>
-          <RefreshCw size={15} />
-          Actualizar
-        </button>
       </div>
       {!estudiantes.error && !estudiantes.loading && !estudiantes.data.length && (
         <Empty text={estado === "bajas" ? "No hay estudiantes dados de baja con estos filtros." : "No hay estudiantes con estos filtros. Carga un CSV con los estudiantes."} />

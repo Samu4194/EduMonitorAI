@@ -299,7 +299,7 @@ header strong {
 }
 .content {
   max-width: 1440px;
-  padding: 42px;
+  padding: 26px 42px 36px;
 }
 .page-heading {
   display: flex;
@@ -2738,4 +2738,206 @@ button.nota-celda.bloqueada:focus-visible svg {
   .nota-escenario {
     grid-template-columns: 1fr;
   }
+}
+
+/* Temas de una actividad (HU-06) */
+.tema-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.tema-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  background: var(--marino-suave);
+  color: var(--marino);
+  white-space: nowrap;
+}
+.temas-selector {
+  border: 1px solid var(--linea);
+  border-radius: 6px;
+  padding: 10px 14px 12px;
+  margin: 0 0 14px;
+  max-height: 220px;
+  overflow: auto;
+}
+.temas-selector legend {
+  padding: 0 6px;
+  font-weight: 600;
+}
+.temas-unidad {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+}
+.temas-unidad label.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 400;
+}
+.temas-unidad label.check input {
+  width: auto;
+}
+.rendimiento-temas {
+  margin: 16px 0;
+  padding: 14px 16px;
+}
+.rendimiento-temas h3 {
+  margin: 0 0 8px;
+}
+.temas-estudiante {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+.temas-estudiante li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  align-items: baseline;
+  padding: 6px 10px;
+  border-radius: 4px;
+  background: var(--papel);
+}
+
+/* Fuente de los datos académicos (administrador) */
+.fuente-academica {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.fuente-academica h3 {
+  margin: 0 0 4px;
+}
+.fuente-academica p {
+  margin: 0;
+  max-width: 70ch;
+}
+
+.enlaces-fila { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 4px 0 12px; font-size: 0.9rem; }
+.enlaces-fila .text-button { font-weight: 500; padding: 0; }
+
+/* Barra de Moodle del curso: un solo bloque con el botón principal de sincronizar. */
+.moodle-barra { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 14px 18px; margin: 12px 0 8px; background: var(--panel); border: 1px solid var(--linea); border-left: 4px solid var(--dorado); border-radius: 10px; }
+.moodle-barra p { margin: 2px 0 0; }
+.moodle-barra a { font-weight: 600; }
+.moodle-sync { display: inline-flex; align-items: center; gap: 8px; padding: 11px 20px; font-size: 1rem; box-shadow: 0 2px 6px rgb(28 50 86 / 0.25); }
+.moodle-sync .girando { animation: girar 1s linear infinite; }
+@keyframes girar { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .moodle-sync .girando { animation: none; } }
+.moodle-resultado { margin: 0 0 12px; padding: 8px 14px; background: var(--ok-fondo); color: var(--ok); border-radius: 8px; font-size: 0.95rem; }
+.moodle-resultado p { margin: 0; }
+.moodle-resultado details { margin-top: 6px; color: var(--alerta); }
+.moodle-resultado summary { cursor: pointer; font-weight: 600; }
+.moodle-resultado ul { margin: 6px 0 0 18px; padding: 0; }
+
+/* Actividades que evalúan cada tema, dentro de la pestaña Contenido. */
+.tema-actividades { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 10px 0 4px; padding-top: 10px; border-top: 1px dashed var(--linea-suave); }
+.actividad-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 4px; background: var(--marino-suave); border-radius: 999px; font-size: 0.9rem; }
+
+/* Tabla de calificaciones: columnas agrupadas por tipo de actividad. */
+.notas .grupo-cab { text-align: center; border-bottom: 2px solid var(--linea); font-size: 0.85rem; letter-spacing: 0.04em; text-transform: uppercase; }
+.notas .grupo-cab small { font-weight: 400; opacity: 0.75; }
+.notas .grupo-cab.tipo-tarea { color: var(--tarea); border-bottom-color: var(--tarea); }
+.notas .grupo-cab.tipo-ape { color: var(--ape); border-bottom-color: var(--ape); }
+.notas .grupo-cab.tipo-examen { color: var(--examen); border-bottom-color: var(--examen); }
+.notas th.grupo-inicio, .notas td.grupo-inicio { border-left: 2px solid var(--linea); }
+
+/* Rendimiento: filtros ordenados por grupos, resumen en fichas y gráficas sin barras de desplazamiento internas. */
+.grafica-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px 22px;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--linea-suave);
+}
+.filtro-grupo {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+}
+.filtro-etiqueta {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--apagado);
+}
+.filtro-grupo select {
+  min-width: 220px;
+}
+.filtro-limpiar {
+  align-self: center;
+}
+.grafica-contexto {
+  margin: 0 0 10px;
+  color: var(--apagado);
+  font-size: 13.5px;
+}
+.grafica-contexto strong {
+  color: var(--marino-oscuro);
+}
+.grafica-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.grafica-tiles > div {
+  display: grid;
+  gap: 2px;
+  padding: 10px 14px;
+  border: 1px solid var(--linea-suave);
+  border-radius: 8px;
+  background: #f7f4ec;
+}
+.grafica-tiles span {
+  font-size: 12px;
+  color: var(--apagado);
+}
+.grafica-tiles strong {
+  font-family: "Source Serif 4", Georgia, serif;
+  font-size: 24px;
+  line-height: 1.1;
+  color: var(--marino-oscuro);
+}
+.grafica-tiles strong em {
+  font-family: inherit;
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 400;
+  color: var(--apagado);
+}
+.grafica-tiles small {
+  font-size: 12px;
+  color: var(--apagado);
+}
+.grafica-tiles .alerta strong {
+  color: var(--riesgo);
+}
+.promedios {
+  max-height: none;
+  overflow: visible;
+}
+.promedio-pista {
+  position: relative;
+}
+.promedio-pista .grupo-marca {
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  background: var(--marino-oscuro);
+  border: 1.5px solid #fff;
+  transform: translate(-50%, -50%) rotate(45deg);
 }

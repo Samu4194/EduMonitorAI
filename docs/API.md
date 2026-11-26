@@ -1,4 +1,4 @@
-# Contratos REST de los Sprints 1 y 2
+# Contratos REST de los Sprints 1, 2 y 3
 
 El navegador utiliza el origen `http://127.0.0.1:5080`. Nginx envía `/api` a YARP. El Gateway solo enruta; los cuatro servicios validan JWT y permisos.
 
@@ -62,6 +62,56 @@ Todo cuelga de un curso. Consultar lo puede hacer el administrador o el docente 
 | GET | `/api/rendimiento/curso/{cursoId}/estudiante/{id}` | Notas y promedios por tema de un estudiante |
 
 Reglas de cálculo: escala de 0 a 10 y nota mínima 7 (configurable por curso). Cada tipo de actividad se promedia; el resultado es la media ponderada de los tipos con notas. Una actividad sin nota es *pendiente*: no se toma como cero y el resultado se marca `definitivo: false` hasta que no quede nada pendiente. Estado: `Óptimo` (resultado mayor o igual a la nota mínima), `En riesgo` (menor) o `Sin calificaciones`. Sin ponderación guardada se usa 30 % tareas, 30 % APE y 40 % exámenes.
+
+## Agente académico (Sprint 3, servicio Seguimiento)
+
+Leer lo puede hacer el administrador o el docente del curso; analizar, editar, aprobar, comunicar, rechazar y regenerar, solo el docente del curso (el administrador recibe 403, un curso ajeno responde 404). Con el período finalizado todo es de solo lectura (409 al escribir). El detalle de reglas, proveedores y estados está en [AGENTE.md](AGENTE.md).
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/seguimiento/agente/estado` | Proveedores de IA (local y nube) con su disponibilidad, si hay correo real y el nivel mínimo con que se redacta |
+| GET | `/api/seguimiento/cursos/{cursoId}` | Panel del último análisis: resumen por nivel, alertas del curso y cada estudiante con sus hallazgos y su recomendación |
+| POST | `/api/seguimiento/cursos/{cursoId}/analisis` | Toma las notas, ejecuta las reglas y responde `202`; las recomendaciones se redactan en segundo plano (con `?soloAlertas=true` solo se calculan las alertas, sin IA, y los borradores y aprobadas del docente pasan al análisis nuevo; es lo que usa el panel «Alertas» del asistente) (409 si ya hay un análisis en proceso, si no hay estudiantes o si no hay calificaciones) |
+| PUT | `/api/seguimiento/recomendaciones/{id}` | Editar un borrador: `{resumen, causas[], accionesDocente[], accionesEstudiante[], mensajeEstudiante}` (hasta 4 elementos por lista) |
+| POST | `/api/seguimiento/recomendaciones/{id}/aprobar` | `{comunicar: bool}`; con `true` además la comunica. Solo desde `Borrador` |
+| POST | `/api/seguimiento/recomendaciones/{id}/comunicar` | Envía al estudiante una recomendación `Aprobada` (una sola vez; `Estado` de la comunicación: `Enviado`, `Simulado` o `Error`) |
+| POST | `/api/seguimiento/recomendaciones/{id}/rechazar` | `{motivo}` (5 a 500 caracteres). Desde `Borrador` o `Aprobada` |
+| POST | `/api/seguimiento/recomendaciones/{id}/regenerar` | Pide otra redacción (`202`). Desde `Borrador` o `Rechazada` |
+| GET | `/api/seguimiento/cursos/{cursoId}/comunicaciones` | Correos comunicados o simulados del curso |
+| GET | `/api/seguimiento/cursos/{cursoId}/reporte` | Reporte del último análisis (404 si aún no hay) |
+| GET | `/api/seguimiento/cursos/{cursoId}/reporte.csv` | El mismo reporte, una fila por estudiante, para Excel |
+
+### Fuente de los datos académicos y Moodle
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/moodle/fuente` | `{fuente: "Moodle"\|"Manual", moodleConfigurado}`. Cualquier usuario autenticado |
+| PUT | `/api/moodle/fuente` | `{fuente}`. Solo el administrador. Con `Moodle` la edición manual de unidades, temas, actividades y notas responde `409` en todos los cursos |
+| GET | `/api/estudiantes/moodle/{cursoId}` | Matrícula de Moodle con la cédula local o **sugerida por correo** (`sugerida: true`) |
+| POST | `/api/moodle/cursos/{cursoId}/sincronizar` | Sincroniza el curso (docente asignado). Devuelve `{creados, actualizados, omitidos, conflictos[], avisos[]}` |
+
+Ver [MOODLE.md](MOODLE.md) para las reglas de lectura.
+
+### Asistente académico (solo el docente del curso; el administrador recibe 403 y otro docente 404)
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/seguimiento/cursos/{cursoId}/asistente/sugerencias` | Preguntas precargadas `{id, grupo, texto, requiereEstudiante}` |
+| GET | `/api/seguimiento/cursos/{cursoId}/asistente/estudiantes?q=` | Busca estudiantes del curso por nombre (sin importar tildes ni mayúsculas); devuelve `{id, nombre, correo}` |
+| POST | `/api/seguimiento/cursos/{cursoId}/asistente/calentar` | Carga el modelo local en segundo plano (`204`) |
+| POST | `/api/seguimiento/cursos/{cursoId}/asistente/mensajes` | `{conversacionId?, texto?, preguntaId?, estudianteIds?[], ignorarDudas?}`. Responde `text/event-stream` con los eventos `inicio`, `aclaracion`, `tarjeta`, `texto`, `ruta`, `fin` y `error`, más un latido (`: latido`) cada 4 s. `400` si la pregunta no es válida, `429` si ya hay una respuesta en curso |
+| GET | `/api/seguimiento/cursos/{cursoId}/asistente/conversaciones` | Conversaciones vigentes con su fecha de vencimiento (30 días tras el último mensaje) |
+| GET | `/api/seguimiento/cursos/{cursoId}/asistente/conversaciones/{id}` | Mensajes (con nombres reales), tarjetas y seudónimos de la conversación |
+| DELETE | `/api/seguimiento/cursos/{cursoId}/asistente/conversaciones/{id}` | Borra la conversación y sus mensajes |
+| POST | `/api/seguimiento/cursos/{cursoId}/asistente/mensajes/{id}/valoracion` | `{util: bool}` |
+| POST | `/api/seguimiento/cursos/{cursoId}/asistente/mensajes/{id}/guardar-ruta` | Guarda la ruta de ese mensaje como recomendación en borrador (`409` si no hay análisis, si el estudiante no estaba en él o si la recomendación ya está aprobada o comunicada) |
+
+Eventos del flujo: `aclaracion` (`{pregunta, grupos:[[{id, nombre, correo}]]}`) cuando hay más de un estudiante posible; `tarjeta` (`{tarjeta:{tipo:"tabla", titulo, columnas, filas, notas}}`); `ruta` (`{mensajeId, estudianteId, ruta, redactando}`, se repite al terminar la redacción); `fin` (`{mensajeId, origen, modelo, alcance:"curso"|"general", verificada, avisos[]}`). Las rutas guardadas llegan al panel dentro de `recomendacion.ruta`.
+
+
+Servicio Evaluaciones: al crear una actividad (`POST /api/actividades`) hay que enviar al menos un `temaIds` si el curso ya tiene temas (`400`); al editarla (`PUT`) un `temaIds` ausente conserva los temas actuales.
+
+Estados de una recomendación: `Generando`, `Borrador`, `Aprobada`, `Comunicada`, `Rechazada` y `Reemplazada` (un análisis nuevo reemplaza lo que no se comunicó ni se rechazó). Niveles de alerta: `Alto`, `Medio`, `Bajo` y `Sin alertas`. Origen de una recomendación: `Plantilla`, `Local` o `Nube`.
 
 ## Cédulas
 

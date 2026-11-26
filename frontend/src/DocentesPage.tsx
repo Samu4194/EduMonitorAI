@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Plus, Pencil, RefreshCw } from "lucide-react";
+import { Plus, Pencil } from "lucide-react";
 import { api, type Docente, type Carrera } from "./api";
 import { useResource } from "./useResource";
 import { Modal, ErrorBox, Empty } from "./components";
@@ -50,14 +50,6 @@ export function DocentesPage() {
               ? "Datos no disponibles"
               : `${docentes.data.length} ${docentes.data.length === 1 ? "registro" : "registros"}`}
         </span>
-        <button
-          className="secondary"
-          disabled={docentes.loading}
-          onClick={docentes.reload}
-        >
-          <RefreshCw size={15} />
-          Actualizar
-        </button>
       </div>
       {!docentes.error && !docentes.loading && !docentes.data.length && (
         <Empty text="Todavía no hay docentes registrados" />
@@ -233,6 +225,7 @@ function DocenteForm({
           <input
             required
             type="email"
+            autoComplete="off"
             maxLength={254}
             value={f.email}
             onChange={(e) => set("email", e.target.value)}
